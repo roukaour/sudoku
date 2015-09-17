@@ -789,7 +789,3 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				print('...Cannot solve further (solved %d cells)' %
 					(self.num_solved() - num_solved))
 		return self.solved()
-
-s = Sudoku('963000000100008000000205000040800000010000700000030025700000030009020407000000900')
-s.solve(True)
-s.verify()
