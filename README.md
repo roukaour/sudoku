@@ -12,5 +12,5 @@ A Sudoku solver that uses human strategies.
 * [3D Medusas](http://www.sudokuwiki.org/3D_Medusa)
 
 These strategies are insufficient to solve all boards. My intention is to
-automate the strategies that I fully understand, since at that point using them
-us just busy work.
+automate the strategies that I fully understand, since at that point doing them
+myself is just busy work.
