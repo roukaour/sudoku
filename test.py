@@ -92,6 +92,7 @@ def test_boards():
 	print('#', 'solved?', 'board', 'method', sep='\t')
 	with open('boards.txt', 'r') as boards:
 		for line in boards:
+			line = line.strip()
 			if not line or line.startswith('#'):
 				continue
 			s = sudoku.Sudoku(line)
