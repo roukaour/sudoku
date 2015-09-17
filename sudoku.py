@@ -727,9 +727,12 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		if verbose:
 			print('Examine subsets of %d unsolved cells to eliminate candidates' % n)
+		print(self) # DEBUG
 		unsolved_cells = [c for c in self.cells() if not c.solved()]
 		for subset in combinations(unsolved_cells, n):
-			seen = intersection(self.seen_from(c.x, c.y) | {c} for c in subset)
+			seen = intersection(self.seen_from(c.x, c.y) for c in subset)
+			# TODO: remove impossible assignments that assign the same value to
+			# cells in the subset that can see each other
 			assignments = [a for a in product(*[c.ds for c in subset])
 				if not any(c.ds.issubset(a) for c in seen)]
 			for cell, ds in zip(subset, transpose(assignments)):
@@ -764,11 +767,9 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				return True
 		if self.solve_3d_medusas(verbose):
 			return True
-		# TODO: fix this solution method
-		# Fails on: 963000000100008000000205000040800000010000700000030025700000030009020407000000900
-		#for n in range(2, 4): # larger subsets are too slow
-		#	if self.solve_n_cell_subset_exclusion(n, verbose):
-		#		return True
+		for n in range(2, 4): # larger subsets are too slow
+			if self.solve_n_cell_subset_exclusion(n, verbose):
+				return True
 		return False
 	
 	def solve(self, verbose=False):
@@ -788,3 +789,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				print('...Cannot solve further (solved %d cells)' %
 					(self.num_solved() - num_solved))
 		return self.solved()
+
+s = Sudoku('963000000100008000000205000040800000010000700000030025700000030009020407000000900')
+s.solve(True)
+s.verify()

@@ -10,7 +10,7 @@ A Sudoku solver that uses human strategies.
   [Swordfish](http://www.sudokuwiki.org/Sword_Fish_Strategy), and
   [Jellyfish](http://www.sudokuwiki.org/Jelly_Fish_Strategy)
 * [3D Medusas](http://www.sudokuwiki.org/3D_Medusa)
-* [Subset exclusion](http://www.sudokuwiki.org/Aligned_Pair_Exclusion) (buggy, temporarily disabled)
+* [Subset exclusion](http://www.sudokuwiki.org/Aligned_Pair_Exclusion) (incomplete)
 
 These strategies are insufficient to solve all boards. My intention is to
 automate the strategies that I fully understand, since at that point doing them
