@@ -704,7 +704,6 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		return False
 	
 	def _3d_medusa_print_chain_start(self, start_cell):
-		#print(self)
 		p, q = sorted(start_cell.ds)
 		print(' > Start chains from cell %s, coloring %d %s and %d %s' %
 			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
