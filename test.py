@@ -26,9 +26,9 @@ def test_solve_methods(solver, verbose=False):
 	for unit_type in sudoku.Sudoku.UNIT_TYPES:
 		if solver.solve_unit_intersection_removals(unit_type, verbose):
 			intersection_plurals = {
-				'row': "rows' pointing pairs/triples",
-				'column': "columns' pointing pairs/triples",
-				'block': 'block+line reductions'}
+				'row': "block+row reductions",
+				'column': "block+column reductions",
+				'block': 'pointing pairs/triples'}
 			intersection_plural = intersection_plurals[unit_type]
 			return (True, (5, intersection_plural))
 	for n in range(2, 5):

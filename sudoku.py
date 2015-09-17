@@ -405,9 +405,9 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		if self.solved():
 			return False
 		intersection_plurals = {
-			'row': "rows' pointing pairs/triples",
-			'column': "columns' pointing pairs/triples",
-			'block': 'block+line reductions'}
+			'row': "block+row reductions",
+			'column': "block+column reductions",
+			'block': 'pointing pairs/triples'}
 		intersection_plural = intersection_plurals[unit_type]
 		if verbose:
 			print('Observe candidate values to find %s' % intersection_plural)
@@ -764,9 +764,11 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				return True
 		if self.solve_3d_medusas(verbose):
 			return True
-		for n in range(2, 4): # larger subsets are too slow
-			if self.solve_n_cell_subset_exclusion(n, verbose):
-				return True
+		# TODO: fix this solution method
+		# Fails on: 963000000100008000000205000040800000010000700000030025700000030009020407000000900
+		#for n in range(2, 4): # larger subsets are too slow
+		#	if self.solve_n_cell_subset_exclusion(n, verbose):
+		#		return True
 		return False
 	
 	def solve(self, verbose=False):
