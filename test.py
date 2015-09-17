@@ -101,8 +101,8 @@ def test_boards():
 			try:
 				s.verify()
 			except:
-				print('error:', line)
-				print(s)
+				print('*** ERROR:', line)
+				sudoku.Sudoku(line).solve(True)
 				break
 			print(s.num_solved() - n, 'TRUE' if s.solved() else 'FALSE', line, hardest, sep='\t')
 
