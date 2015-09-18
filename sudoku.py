@@ -727,7 +727,6 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		if verbose:
 			print('Examine subsets of %d unsolved cells to eliminate candidates' % n)
-		print(self) # DEBUG
 		unsolved_cells = [c for c in self.cells() if not c.solved()]
 		for subset in combinations(unsolved_cells, n):
 			seen = intersection(self.seen_from(c.x, c.y) for c in subset)
