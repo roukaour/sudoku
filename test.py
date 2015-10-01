@@ -9,7 +9,7 @@
 
 from __future__ import print_function
 
-import sudoku
+from sudoku import *
 
 def test_solve_methods(solver, verbose=False):
 	if solver.solved():
@@ -20,10 +20,10 @@ def test_solve_methods(solver, verbose=False):
 		return (True, (1.5, 'hidden singletons'))
 	for n in range(2, 5):
 		if solver.solve_naked_n_tuples(n, verbose):
-			return (True, (n, 'naked %ss' % sudoku.n_tuple_name(n)))
+			return (True, (n, 'naked %ss' % n_tuple_name(n)))
 		if solver.solve_hidden_n_tuples(n, verbose):
-			return (True, (n+0.5, 'hidden %ss' % sudoku.n_tuple_name(n)))
-	for unit_type in sudoku.Sudoku.UNIT_TYPES:
+			return (True, (n+0.5, 'hidden %ss' % n_tuple_name(n)))
+	for unit_type in Sudoku.UNIT_TYPES:
 		if solver.solve_unit_intersection_removals(unit_type, verbose):
 			intersection_plurals = {
 				'row': "block+row reductions",
@@ -95,14 +95,14 @@ def test_boards():
 			line = line.strip()
 			if not line or line.startswith('#'):
 				continue
-			s = sudoku.Sudoku(line)
+			s = Sudoku(line)
 			n = s.num_solved()
 			solved, hardest = test_solve(s)
 			try:
 				s.verify()
 			except:
 				print('*** ERROR:', line)
-				sudoku.Sudoku(line).solve(True)
+				Sudoku(line).solve(True)
 				break
 			print(s.num_solved() - n, 'TRUE' if s.solved() else 'FALSE', line, hardest, sep='\t')
 

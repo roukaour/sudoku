@@ -15,3 +15,10 @@ A Sudoku solver that uses human strategies.
 These strategies are insufficient to solve all boards. My intention is to
 automate the strategies that I fully understand, since at that point doing them
 myself is just busy work.
+
+Other boards can apparently be solved with simpler strategies by
+[Sudoku Wiki](http://www.sudokuwiki.org/sudoku.htm), but my solver resorts to
+more complicated ones:
+
+* 100000700006920000009308500000090008000072000350000007000001090600009410000640800
+* 103450000000000020400807000381070000600300000000000900000500004000002800005061000
