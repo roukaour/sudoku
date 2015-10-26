@@ -17,7 +17,7 @@ def set_string(s):
 	return '{' + ', '.join(map(str, sorted(s))) + '}'
 
 def n_tuple_name(n):
-	names = {1: 'singleton', 2: 'pair', 3: 'triple', 4: 'quad'}
+	names = {1: 'single', 2: 'pair', 3: 'triple', 4: 'quad'}
 	return names.get(n, '%d-tuple' % n)
 
 def any_equal(s):
@@ -303,19 +303,19 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 	def num_solved(self):
 		return len([c for c in self.cells() if c.solved()])
 	
-	def solve_strip_naked_singletons(self, verbose=False):
+	def solve_strip_naked_singles(self, verbose=False):
 		if self.solved():
 			return False
 		if verbose:
-			print('Eliminate candidate values to find naked singletons')
+			print('Eliminate candidate values to find naked singles')
 		changed = False
 		for y, x in product(range(9), range(9)):
-			changed |= self.solve_strip_naked_singleton(x, y, verbose)
+			changed |= self.solve_strip_naked_single(x, y, verbose)
 		if verbose and not changed:
-			print('...No naked singletons found')
+			print('...No naked singles found')
 		return changed
 	
-	def solve_strip_naked_singleton(self, x, y, verbose=False):
+	def solve_strip_naked_single(self, x, y, verbose=False):
 		cell = self.cell(x, y)
 		if cell.solved():
 			return False
@@ -749,7 +749,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 	def solve_methods(self, verbose=False):
 		if self.solved():
 			return False
-		if self.solve_strip_naked_singletons(verbose):
+		if self.solve_strip_naked_singles(verbose):
 			return True
 		if self.solve_hidden_n_tuples(1, verbose):
 			return True
