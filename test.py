@@ -107,4 +107,8 @@ def test_boards():
 			print(s.num_solved() - n, 'TRUE' if s.solved() else 'FALSE', line, hardest, sep='\t')
 
 if __name__ == '__main__':
-	test_boards()
+	#test_boards()
+	s = Sudoku('103450000000000020400807000381070000600300000000000900000500004000002800005061000')
+	s.solve(verbose=True)
+	s.verify()
+	print(s)

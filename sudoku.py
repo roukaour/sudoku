@@ -377,7 +377,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 	def solve_hidden_n_tuples_in_unit(self, unit_type, n, i, verbose=False):
 		changed = False
 		unit = self.unit(unit_type, i)
-		filtered_unit = [c for c in unit if len(c.ds) > n]
+		filtered_unit = [c for c in unit if not c.solved()]
 		for cells in combinations(filtered_unit, n):
 			cells_candidates = union(c.ds for c in cells)
 			unit_candidates = union(c.ds for c in set(self.unit(unit_type, i)) - set(cells))
