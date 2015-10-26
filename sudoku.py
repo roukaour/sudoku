@@ -748,43 +748,55 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 
 	def solve_methods(self, verbose=False):
 		if self.solved():
-			return False
+			return 0
 		if self.solve_strip_naked_singles(verbose):
-			return True
+			return 1
 		if self.solve_hidden_n_tuples(1, verbose):
-			return True
+			return 2
 		for n in range(2, 5):
 			if self.solve_naked_n_tuples(n, verbose):
-				return True
+				return n * 2 - 1
 			if self.solve_hidden_n_tuples(n, verbose):
-				return True
+				return n * 2
 		for unit_type in Sudoku.UNIT_TYPES:
 			if self.solve_unit_intersection_removals(unit_type, verbose):
-				return True
+				return 9
 		for n in range(2, 5):
 			if self.solve_n_fish(n, verbose):
-				return True
+				return 9 + n
 		if self.solve_3d_medusas(verbose):
-			return True
+			return 14
 		for n in range(2, 4): # larger subsets are too slow
 			if self.solve_n_cell_subset_exclusion(n, verbose):
-				return True
-		return False
+				return 12 + n
+		return 0
+	
+	def method_name(self, difficulty):
+		method_names = ['nothing', 'naked singles', 'hidden singles',
+			'naked pairs', 'hidden pairs', 'naked triples', 'hidden triples',
+			'naked quads', 'hidden quads', 'unit intersections', 'X-wings',
+			'swordfish', 'jellyfish', '3D Medusas', '2-cell subset exclusion',
+			'3-cell subset exclusion']
+		return method_names[difficulty]
 	
 	def solve(self, verbose=False):
 		if self.solved():
 			if verbose:
 				print('Already solved!')
-			return True
+			return self.method_name(0)
 		if verbose:
 			print('Solving %r' % self)
 		num_solved = self.num_solved()
-		while self.solve_methods(verbose):
-			pass
+		difficulty = 0
+		last_difficulty = 1
+		while last_difficulty:
+			last_difficulty = self.solve_methods(verbose)
+			difficulty = max(difficulty, last_difficulty)
 		if verbose:
 			if self.solved():
 				print('Completely solved!')
+				print('Most advanced method used:', self.method_name(difficulty))
 			else:
 				print('...Cannot solve further (solved %d cells)' %
 					(self.num_solved() - num_solved))
-		return self.solved()
+		return self.method_name(difficulty)
