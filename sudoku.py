@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 from __future__ import print_function
-
 from itertools import product, combinations
+import sys
 
 def flatten(L):
 	return [i for x in L for i in x]
@@ -800,3 +800,12 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				print('...Cannot solve further (solved %d cells)' %
 					(self.num_solved() - num_solved))
 		return self.method_name(difficulty)
+
+def main():
+	if len(sys.argv) > 1:
+		s = Sudoku(sys.argv[1])
+		s.solve(verbose=True)
+		s.verify()
+
+if __name__ == '__main__':
+	main()
