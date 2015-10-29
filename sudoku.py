@@ -306,7 +306,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		if self.solved():
 			return False
 		if verbose:
-			print('Eliminate candidate values to find naked singles')
+			print('Try naked singles')
 		changed = False
 		for y, x in product(range(9), range(9)):
 			changed |= self.solve_strip_naked_single(x, y, verbose)
@@ -330,7 +330,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		tuple_name = n_tuple_name(n)
 		if verbose:
-			print('Observe candidate values to find naked %ss' % tuple_name)
+			print('Try naked %ss' % tuple_name)
 		changed = False
 		for unit_type, i in product(Sudoku.UNIT_TYPES, range(9)):
 			changed |= self.solve_naked_n_tuples_in_unit(unit_type, n, i, verbose)
@@ -365,7 +365,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		tuple_name = n_tuple_name(n)
 		if verbose:
-			print('Observe candidate values to find hidden %ss' % tuple_name)
+			print('Try hidden %ss' % tuple_name)
 		changed = False
 		for unit_type, i in product(Sudoku.UNIT_TYPES, range(9)):
 			changed |= self.solve_hidden_n_tuples_in_unit(unit_type, n, i, verbose)
@@ -409,7 +409,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			'block': 'pointing pairs/triples'}
 		intersection_plural = intersection_plurals[unit_type]
 		if verbose:
-			print('Observe candidate values to find %s' % intersection_plural)
+			print('Try %s' % intersection_plural)
 		changed = False
 		for i in range(9):
 			num_solved = self.num_solved()
@@ -465,7 +465,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		n_fish_name = {2: 'X-wing', 3: 'swordfish', 4: 'jellyfish'}[n]
 		if verbose:
-			print('Observe candidate values to find %s patterns' % n_fish_name)
+			print('Try %s patterns' % n_fish_name)
 		changed = False
 		for unit_type, indexes in product(['row', 'column'], combinations(range(9), n)):
 			num_solved = self.num_solved()
@@ -521,7 +521,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		if self.solved():
 			return False
 		if verbose:
-			print('Color chains of candidate values (3D Medusas) to eliminate candidates')
+			print('Try coloring 3D Medusas')
 		changed = False
 		for y, x in product(range(9), range(9)):
 			num_solved = self.num_solved()
@@ -725,7 +725,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		if self.solved():
 			return False
 		if verbose:
-			print('Examine subsets of %d unsolved cells to eliminate candidates' % n)
+			print('Try %d-cell subset exclusion' % n)
 		unsolved_cells = [c for c in self.cells() if not c.solved()]
 		for subset in combinations(unsolved_cells, n):
 			seen = intersection(self.seen_from(c.x, c.y) for c in subset)
