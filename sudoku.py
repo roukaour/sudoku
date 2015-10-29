@@ -154,9 +154,9 @@ class Sudoku(object):
 		return 'Sudoku(%r)' % ''.join(str(c.value()) for c in self.cells())
 	
 	def __str__(self):
-		return self._solved_str() if self.solved() else self._unsolved_str()
+		return self.terse_str() if self.solved() else self.verbose_str()
 	
-	def _solved_str(self):
+	def terse_str(self):
 		return '''    1 2 3   4 5 6   7 8 9
   +-------+-------+-------+
 A | %s %s %s | %s %s %s | %s %s %s |
@@ -172,7 +172,7 @@ H | %s %s %s | %s %s %s | %s %s %s |
 J | %s %s %s | %s %s %s | %s %s %s |
   +-------+-------+-------+''' % tuple(c.value() for c in self.cells())
 	
-	def _unsolved_str(self):
+	def verbose_str(self):
 		s = flatten(list('   (%d)   ' % c.value()) if c.solved() else
 			[c.dcs.get(d, Color.NEITHER).colored(d) if d in c.ds else '.'
 				for d in Cell.VALUES] for c in self.cells())
@@ -779,6 +779,8 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		return method_names[difficulty]
 	
 	def solve(self, verbose=False):
+		if verbose:
+			print(self.terse_str())
 		if self.solved():
 			if verbose:
 				print('Already solved!')
@@ -798,6 +800,8 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			else:
 				print('...Cannot solve further (solved %d cells)' %
 					(self.num_solved() - num_solved))
+		if verbose:
+			print(self)
 		return self.method_name(difficulty)
 
 def main():
