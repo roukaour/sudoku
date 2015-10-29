@@ -27,7 +27,7 @@ def all_equal(s):
 	return all(all(x == y for y in s) for x in s)
 
 def union(s):
-	return set().union(*s)
+	return reduce(set.union, s, set())
 
 def intersection(s):
 	return reduce(set.intersection, s)
