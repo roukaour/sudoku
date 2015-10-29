@@ -30,8 +30,7 @@ def union(s):
 	return set().union(*s)
 
 def intersection(s):
-	s = list(s)
-	return set(s[0]).intersection(*s)
+	return reduce(set.intersection, s)
 
 class Color(object):
 	
