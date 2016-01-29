@@ -17,13 +17,9 @@ def test_boards():
 			line = line.strip()
 			if not line or line.startswith('#'):
 				continue
-			try:
-				s = Sudoku(line)
-				n = s.num_solved()
-				hardest = s.solve()
-			except:
-				print('*** ERROR:', line)
-				break
+			s = Sudoku(line)
+			n = s.num_solved()
+			hardest = s.solve()
 			try:
 				s.verify()
 			except:
