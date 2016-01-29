@@ -762,9 +762,9 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				return 9
 		for n in range(2, 5):
 			if self.solve_n_fish(n, verbose):
-				return 9 + n
+				return 8 + n
 		if self.solve_3d_medusas(verbose):
-			return 14
+			return 13
 		for n in range(2, 4): # larger subsets are too slow
 			if self.solve_n_cell_subset_exclusion(n, verbose):
 				return 12 + n
