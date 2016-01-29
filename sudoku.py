@@ -343,10 +343,9 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		unit = self.unit(unit_type, i)
 		filtered_unit = [c for c in unit if len(c.ds) in range(2, n+1)]
 		for cells in combinations(filtered_unit, n):
-			if not all_equal(c.ds for c in cells):
+			candidates = union(c.ds for c in cells)
+			if len(candidates) != n:
 				continue
-			sample_cell = cells[0]
-			candidates = sample_cell.ds
 			unit_changed = False
 			for cell in unit:
 				if cell in cells:
