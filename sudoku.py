@@ -274,7 +274,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 	def unit_without(self, unit_type, x, y):
 		units_without = {
 			'row': self.row_without,
-			'column': self.column_without,
+			'column': self.col_without,
 			'block': self.block_without}
 		return units_without[unit_type](x, y)
 
@@ -751,8 +751,10 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		p, q = sorted(start_cell.ds)
 		start_cell.dcs[p], start_cell.dcs[q] = Color.RED, Color.BLUE
-		while (self._guess_bi_value_propagate_color(Color.RED, verbose) or
-			self._guess_bi_value_propagate_color(Color.BLUE, verbose)):
+		while (self._guess_bi_value_propagate_naked_color(Color.RED, verbose) or
+			self._guess_bi_value_propagate_naked_color(Color.BLUE, verbose) or
+			self._guess_bi_value_propagate_hidden_color(Color.RED, verbose) or
+			self._guess_bi_value_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
 		changed = (self._guess_bi_value_check(start_cell, Color.RED, verbose) or
 			self._guess_bi_value_check(start_cell, Color.BLUE, verbose))
@@ -760,18 +762,31 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			cell.dcs = {}
 		return changed
 
-	def _guess_bi_value_propagate_color(self, color, verbose=False):
+	def _guess_bi_value_propagate_naked_color(self, color, verbose=False):
 		colored = False
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
 				continue
 			seen = self.seen_from(cell.x, cell.y)
-			seen_colored = union(({d for d in c.dcs if c.dcs[d] & color} for c in seen))
+			seen_colored = union({d for d in c.dcs if c.dcs[d] & color} for c in seen)
 			candidates = cell.ds - seen_colored
 			if len(candidates) == 1:
 				d = list(candidates)[0]
 				cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | color
 				colored = True
+		return colored
+
+	def _guess_bi_value_propagate_hidden_color(self, color, verbose=False):
+		colored = False
+		for cell in self.cells():
+			if cell.solved() or any(r & color for r in cell.dcs.values()):
+				continue
+			seen = self.seen_from(cell.x, cell.y)
+			for unit_type, d in product(Sudoku.UNIT_TYPES, cell.ds):
+				seen_unit = self.unit_without(unit_type, cell.x, cell.y)
+				if all(c.dcs.get(d, Color.NEITHER) == ~color for c in seen_unit):
+					cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | color
+					colored = True
 		return colored
 
 	def _guess_bi_value_check(self, start_cell, color, verbose=False):
