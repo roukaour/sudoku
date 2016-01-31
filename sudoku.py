@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import print_function
+
 from itertools import product, combinations
 import sys
 
@@ -54,12 +55,21 @@ class Color(object):
 	def __invert__(self):
 		return Color.colors[~self.value]
 
+	def __and__(self, other):
+		return Color.colors[self.value & other.value]
+
+	def __or__(self, other):
+		return Color.colors[self.value | other.value]
+
 	def colored(self, s):
-		return '\x1b[%sm%s\x1b[0m' % (self.code, s)
+		if sys.platform == 'posix':
+			return '\x1b[%sm%s\x1b[0m' % (self.code, s)
+		return s
 
 Color.NEITHER = Color(0, 'neither', '0')
 Color.RED = Color(1, 'red', '31;1')
 Color.BLUE = Color(~1, 'blue', '44')
+Color.PURPLE = Color(~0, 'purple', '37;45;1')
 
 class Cell(object):
 
@@ -720,6 +730,86 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						cell.value_string()))
 		return changed
 
+	def solve_guessed_bi_value_cells(self, verbose=False):
+		if self.solved():
+			return False
+		if verbose:
+			print('Try guessing bi-value cells')
+		changed = False
+		for y, x in product(range(9), range(9)):
+			num_solved = self.num_solved()
+			changed |= self.solve_guessed_bi_value_cell(x, y, verbose)
+			if self.num_solved() > num_solved:
+				return True
+		if verbose and not changed:
+			print('...No guessable bi-value cells found')
+		return changed
+
+	def solve_guessed_bi_value_cell(self, x, y, verbose=False):
+		start_cell = self.cell(x, y)
+		if not start_cell.bi_value():
+			return False
+		p, q = sorted(start_cell.ds)
+		start_cell.dcs[p], start_cell.dcs[q] = Color.RED, Color.BLUE
+		while (self._guess_bi_value_propagate_color(Color.RED, verbose) or
+			self._guess_bi_value_propagate_color(Color.BLUE, verbose)):
+			pass
+		changed = (self._guess_bi_value_check(start_cell, Color.RED, verbose) or
+			self._guess_bi_value_check(start_cell, Color.BLUE, verbose))
+		for cell in self.cells():
+			cell.dcs = {}
+		return changed
+
+	def _guess_bi_value_propagate_color(self, color, verbose=False):
+		colored = False
+		for cell in self.cells():
+			if cell.solved() or any(r & color for r in cell.dcs.values()):
+				continue
+			seen = self.seen_from(cell.x, cell.y)
+			seen_colored = union(({d for d in c.dcs if c.dcs[d] & color} for c in seen))
+			candidates = cell.ds - seen_colored
+			if len(candidates) == 1:
+				d = list(candidates)[0]
+				cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | color
+				colored = True
+		return colored
+
+	def _guess_bi_value_check(self, start_cell, color, verbose=False):
+		for cell in self.cells():
+			if cell.solved() or any(r & color for r in cell.dcs.values()):
+				continue
+			seen = self.seen_from(cell.x, cell.y)
+			seen_colored = union(({d for d in c.dcs if c.dcs[d] & color} for c in seen))
+			candidates = cell.ds - seen_colored
+			if candidates:
+				continue
+			if verbose:
+				self._guess_bi_value_print_start(start_cell)
+				print(' > Find cells that can see all their candidates in the same color')
+				print(' * Cell %s can see all its candidates %s in %s' %
+					(cell.cell_name(), cell.value_string(), color))
+			return self._guess_bi_value_use_color(~color, verbose)
+		return False
+
+	def _guess_bi_value_print_start(self, start_cell):
+		p, q = sorted(start_cell.ds)
+		print(' > Start from cell %s, coloring %d %s and %d %s' %
+			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
+
+	def _guess_bi_value_use_color(self, color, verbose=False):
+		if verbose:
+			print(' > Use all candidates colored %s' % color)
+		changed = False
+		for cell in self.cells():
+			for d in cell.dcs:
+				if not (cell.dcs[d] & color):
+					continue
+				changed |= cell.include_only({d})
+				if verbose:
+					print(' * Cell %s can only be %s' % (cell.cell_name(),
+						cell.value_string()))
+		return changed
+
 	def solve_n_cell_subset_exclusion(self, n, verbose=False):
 		if self.solved():
 			return False
@@ -764,17 +854,19 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				return 8 + n
 		if self.solve_3d_medusas(verbose):
 			return 13
+		if self.solve_guessed_bi_value_cells(verbose):
+			return 14
 		for n in range(2, 4): # larger subsets are too slow
 			if self.solve_n_cell_subset_exclusion(n, verbose):
-				return 12 + n
+				return 13 + n
 		return 0
 
 	def method_name(self, difficulty):
 		method_names = ['nothing', 'naked singles', 'hidden singles',
 			'naked pairs', 'hidden pairs', 'naked triples', 'hidden triples',
 			'naked quads', 'hidden quads', 'unit intersections', 'X-wings',
-			'swordfish', 'jellyfish', '3D Medusas', '2-cell subset exclusion',
-			'3-cell subset exclusion']
+			'swordfish', 'jellyfish', '3D Medusas', 'guessed bi-value cell',
+			'2-cell subset exclusion', '3-cell subset exclusion']
 		return method_names[difficulty]
 
 	def solve(self, verbose=False):
