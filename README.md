@@ -12,7 +12,8 @@ A Sudoku solver that uses human strategies.
 * [3D Medusas](http://www.sudokuwiki.org/3D_Medusa) (a generalization of
   [simple coloring](http://www.sudokuwiki.org/Singles_Chains))
 * Guessing bi-value cells (related to
-  [forcing chains](http://www.sudokuwiki.org/Digit_Forcing_Chains))
+  [forcing chains/nets](http://www.sudokuwiki.org/Digit_Forcing_Chains) and
+  [Bowman's Bingo](http://www.sudokuwiki.org/Bowmans_Bingo))
 * [Subset exclusion](http://www.sudokuwiki.org/Aligned_Pair_Exclusion) (incomplete)
 
 These strategies are insufficient to solve all boards. My intention is to
