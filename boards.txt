@@ -26,12 +26,12 @@
 #???
 # Solvable with only 3D Medusas
 000000000000001002034000050000020030100006000700000000000300001000540000200000089
-# Solvable with guessing bi-value cells
+# Solvable with bi-value cell forcing chains
 000000001000000023004005000000006400020000000710000000000010060000230000008700900
 # Solvable with only 2-cell subset exclusion
 #???
 # Solvable with only 3-cell subset exclusion
-#???
+000000000000001002034050060000002007006000300800097000000060500100000000200000000
 
 # Minimum 17-hint Sudoku
 # http://staffhome.ecm.uwa.edu.au/~00013890/sudokumin.php

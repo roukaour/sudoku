@@ -62,7 +62,7 @@ class Color(object):
 		return Color.colors[self.value | other.value]
 
 	def colored(self, s):
-		if sys.platform == 'posix':
+		if sys.platform != 'win32':
 			return '\x1b[%sm%s\x1b[0m' % (self.code, s)
 		return s
 
@@ -730,39 +730,39 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						cell.value_string()))
 		return changed
 
-	def solve_guessed_bi_value_cells(self, verbose=False):
+	def solve_cell_forcing_chains(self, verbose=False):
 		if self.solved():
 			return False
 		if verbose:
-			print('Try guessing bi-value cells')
+			print('Try bi-value cell forcing chains')
 		changed = False
 		for y, x in product(range(9), range(9)):
 			num_solved = self.num_solved()
-			changed |= self.solve_guessed_bi_value_cell(x, y, verbose)
+			changed |= self.solve_cell_forcing_chain_at(x, y, verbose)
 			if self.num_solved() > num_solved:
 				return True
 		if verbose and not changed:
-			print('...No guessable bi-value cells found')
+			print('...No bi-value cell forcing chains found')
 		return changed
 
-	def solve_guessed_bi_value_cell(self, x, y, verbose=False):
+	def solve_cell_forcing_chain_at(self, x, y, verbose=False):
 		start_cell = self.cell(x, y)
 		if not start_cell.bi_value():
 			return False
 		p, q = sorted(start_cell.ds)
 		start_cell.dcs[p], start_cell.dcs[q] = Color.RED, Color.BLUE
-		while (self._guess_bi_value_propagate_naked_color(Color.RED, verbose) or
-			self._guess_bi_value_propagate_naked_color(Color.BLUE, verbose) or
-			self._guess_bi_value_propagate_hidden_color(Color.RED, verbose) or
-			self._guess_bi_value_propagate_hidden_color(Color.BLUE, verbose)):
+		while (self._cell_forcing_chain_propagate_naked_color(Color.RED, verbose) or
+			self._cell_forcing_chain_propagate_naked_color(Color.BLUE, verbose) or
+			self._cell_forcing_chain_propagate_hidden_color(Color.RED, verbose) or
+			self._cell_forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
-		changed = (self._guess_bi_value_check(start_cell, Color.RED, verbose) or
-			self._guess_bi_value_check(start_cell, Color.BLUE, verbose))
+		changed = (self._cell_forcing_chain_check(start_cell, Color.RED, verbose) or
+			self._cell_forcing_chain_check(start_cell, Color.BLUE, verbose))
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
 
-	def _guess_bi_value_propagate_naked_color(self, color, verbose=False):
+	def _cell_forcing_chain_propagate_naked_color(self, color, verbose=False):
 		colored = False
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
@@ -776,7 +776,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				colored = True
 		return colored
 
-	def _guess_bi_value_propagate_hidden_color(self, color, verbose=False):
+	def _cell_forcing_chain_propagate_hidden_color(self, color, verbose=False):
 		colored = False
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
@@ -789,7 +789,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 					colored = True
 		return colored
 
-	def _guess_bi_value_check(self, start_cell, color, verbose=False):
+	def _cell_forcing_chain_check(self, start_cell, color, verbose=False):
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
 				continue
@@ -799,19 +799,19 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			if candidates:
 				continue
 			if verbose:
-				self._guess_bi_value_print_start(start_cell)
+				self._cell_forcing_chain_print_start(start_cell)
 				print(' > Find cells that can see all their candidates in the same color')
 				print(' * Cell %s can see all its candidates %s in %s' %
 					(cell.cell_name(), cell.value_string(), color))
-			return self._guess_bi_value_use_color(~color, verbose)
+			return self._cell_forcing_chain_use_color(~color, verbose)
 		return False
 
-	def _guess_bi_value_print_start(self, start_cell):
+	def _cell_forcing_chain_print_start(self, start_cell):
 		p, q = sorted(start_cell.ds)
 		print(' > Start from cell %s, coloring %d %s and %d %s' %
 			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
 
-	def _guess_bi_value_use_color(self, color, verbose=False):
+	def _cell_forcing_chain_use_color(self, color, verbose=False):
 		if verbose:
 			print(' > Use all candidates colored %s' % color)
 		changed = False
@@ -869,7 +869,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				return 8 + n
 		if self.solve_3d_medusas(verbose):
 			return 13
-		if self.solve_guessed_bi_value_cells(verbose):
+		if self.solve_cell_forcing_chains(verbose):
 			return 14
 		for n in range(2, 4): # larger subsets are too slow
 			if self.solve_n_cell_subset_exclusion(n, verbose):
@@ -880,7 +880,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		method_names = ['nothing', 'naked singles', 'hidden singles',
 			'naked pairs', 'hidden pairs', 'naked triples', 'hidden triples',
 			'naked quads', 'hidden quads', 'unit intersections', 'X-wings',
-			'swordfish', 'jellyfish', '3D Medusas', 'guessed bi-value cell',
+			'swordfish', 'jellyfish', '3D Medusas', 'bi-value cell forcing chains',
 			'2-cell subset exclusion', '3-cell subset exclusion']
 		return method_names[difficulty]
 
