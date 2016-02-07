@@ -98,6 +98,9 @@ class Cell(object):
 		return 'Cell(%d, %d, {%s})' % (self.x, self.y, ', '.join(
 			self.dcs.get(d, Color.NEITHER).colored(d) for d in sorted(self.ds)))
 
+	def __lt__(self, other):
+		return self.y < other.y or self.x < other.x
+
 	def row_name(self):
 		return Cell.ROWS[self.y]
 
@@ -751,18 +754,66 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		p, q = sorted(start_cell.ds)
 		start_cell.dcs[p], start_cell.dcs[q] = Color.RED, Color.BLUE
-		while (self._cell_forcing_chain_propagate_naked_color(Color.RED, verbose) or
-			self._cell_forcing_chain_propagate_naked_color(Color.BLUE, verbose) or
-			self._cell_forcing_chain_propagate_hidden_color(Color.RED, verbose) or
-			self._cell_forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
+		while (self._forcing_chain_propagate_naked_color(Color.RED, verbose) or
+			self._forcing_chain_propagate_naked_color(Color.BLUE, verbose) or
+			self._forcing_chain_propagate_hidden_color(Color.RED, verbose) or
+			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
-		changed = (self._cell_forcing_chain_check(start_cell, Color.RED, verbose) or
-			self._cell_forcing_chain_check(start_cell, Color.BLUE, verbose))
+		print_start = lambda: self._cell_forcing_chain_print_start(start_cell)
+		changed = (self._forcing_chain_check(print_start, Color.RED, verbose) or
+			self._forcing_chain_check(print_start, Color.BLUE, verbose))
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
 
-	def _cell_forcing_chain_propagate_naked_color(self, color, verbose=False):
+	def _cell_forcing_chain_print_start(self, start_cell):
+		p, q = sorted(start_cell.ds)
+		print(' > Start from cell %s, coloring %d %s and %d %s' %
+			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
+
+	def solve_unit_forcing_chains(self, verbose=False):
+		if self.solved():
+			return False
+		if verbose:
+			print('Try dual unit forcing chains')
+		changed = False
+		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), range(9)):
+			num_solved = self.num_solved()
+			changed |= self.solve_unit_forcing_chain_at(unit_type, i, d, verbose)
+			if self.num_solved() > num_solved:
+				return True
+		if verbose and not changed:
+			print('...No dual unit forcing chains found')
+		return changed
+
+	def solve_unit_forcing_chain_at(self, unit_type, i, d, verbose=False):
+		unit = self.unit(unit_type, i)
+		start_cells = [c for c in unit if d in c.ds]
+		if len(start_cells) != 2:
+			return False
+		start_red, start_blue = sorted(start_cells)
+		start_red.dcs[d], start_blue.dcs[d] = Color.RED, Color.BLUE
+		while (self._forcing_chain_propagate_naked_color(Color.RED, verbose) or
+			self._forcing_chain_propagate_naked_color(Color.BLUE, verbose) or
+			self._forcing_chain_propagate_hidden_color(Color.RED, verbose) or
+			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
+			pass
+		print_start = lambda: self._unit_forcing_chain_print_start(unit_type, i, d)
+		changed = (self._forcing_chain_check(print_start, Color.RED, verbose) or
+			self._forcing_chain_check(print_start, Color.BLUE, verbose))
+		for cell in self.cells():
+			cell.dcs = {}
+		return changed
+
+	def _unit_forcing_chain_print_start(self, unit_type, i, d):
+		unit = self.unit(unit_type, i)
+		start_cells = [c for c in unit if d in c.ds]
+		start_red, start_blue = sorted(start_cells)
+		print(' > Start from %s %s, coloring %d %s in cell %s and %s in cell %s' %
+			(unit_type, self.unit_name(unit_type, i), d, start_red.dcs[d],
+				start_red.cell_name(), start_blue.dcs[d], start_blue.cell_name()))
+
+	def _forcing_chain_propagate_naked_color(self, color, verbose=False):
 		colored = False
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
@@ -776,7 +827,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				colored = True
 		return colored
 
-	def _cell_forcing_chain_propagate_hidden_color(self, color, verbose=False):
+	def _forcing_chain_propagate_hidden_color(self, color, verbose=False):
 		colored = False
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
@@ -789,7 +840,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 					colored = True
 		return colored
 
-	def _cell_forcing_chain_check(self, start_cell, color, verbose=False):
+	def _forcing_chain_check(self, print_start, color, verbose=False):
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
 				continue
@@ -799,19 +850,14 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			if candidates:
 				continue
 			if verbose:
-				self._cell_forcing_chain_print_start(start_cell)
+				print_start()
 				print(' > Find cells that can see all their candidates in the same color')
 				print(' * Cell %s can see all its candidates %s in %s' %
 					(cell.cell_name(), cell.value_string(), color))
-			return self._cell_forcing_chain_use_color(~color, verbose)
+			return self._forcing_chain_use_color(~color, verbose)
 		return False
 
-	def _cell_forcing_chain_print_start(self, start_cell):
-		p, q = sorted(start_cell.ds)
-		print(' > Start from cell %s, coloring %d %s and %d %s' %
-			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
-
-	def _cell_forcing_chain_use_color(self, color, verbose=False):
+	def _forcing_chain_use_color(self, color, verbose=False):
 		if verbose:
 			print(' > Use all candidates colored %s' % color)
 		changed = False
@@ -871,16 +917,19 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return 13
 		if self.solve_cell_forcing_chains(verbose):
 			return 14
+		if self.solve_unit_forcing_chains(verbose):
+			return 15
 		for n in range(2, 4): # larger subsets are too slow
 			if self.solve_n_cell_subset_exclusion(n, verbose):
-				return 13 + n
+				return 14 + n
 		return 0
 
 	def method_name(self, difficulty):
 		method_names = ['nothing', 'naked singles', 'hidden singles',
 			'naked pairs', 'hidden pairs', 'naked triples', 'hidden triples',
 			'naked quads', 'hidden quads', 'unit intersections', 'X-wings',
-			'swordfish', 'jellyfish', '3D Medusas', 'bi-value cell forcing chains',
+			'swordfish', 'jellyfish', '3D Medusas',
+			'bi-value cell forcing chains', 'dual unit forcing chains',
 			'2-cell subset exclusion', '3-cell subset exclusion']
 		return method_names[difficulty]
 
