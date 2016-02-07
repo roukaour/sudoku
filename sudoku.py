@@ -771,7 +771,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			seen_colored = union({d for d in c.dcs if c.dcs[d] & color} for c in seen)
 			candidates = cell.ds - seen_colored
 			if len(candidates) == 1:
-				d = list(candidates)[0]
+				d, = candidates
 				cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | color
 				colored = True
 		return colored
