@@ -880,9 +880,11 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			seen = self.seen_from(cell.x, cell.y)
 			for unit_type, d in product(Sudoku.UNIT_TYPES, cell.ds):
 				seen_unit = self.unit_without(unit_type, cell.x, cell.y)
-				if all(c.dcs.get(d, Color.NEITHER) == ~color or
-					any(c2.dcs.get(d, Color.NEITHER) & color for c2 in
-						self.seen_from(c.x, c.y)) for c in seen_unit if d in c.ds):
+				# TODO: implement grouped nodes
+				#if all(c.dcs.get(d, Color.NEITHER) == ~color or
+				#	any(c2.dcs.get(d, Color.NEITHER) & color for c2 in
+				#		self.seen_from(c.x, c.y)) for c in seen_unit if d in c.ds):
+				if all(c.dcs.get(d, Color.NEITHER) == ~color for c in seen_unit):
 					cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | color
 					colored = True
 		return colored

@@ -14,9 +14,7 @@ A Sudoku solver that uses human strategies.
 * Dual Medusas (3D Medusas that start with a bi-location value in a unit instead
   of a bi-value cell)
 * [Bi-value cell forcing chains](http://www.sudokuwiki.org/Cell_Forcing_Chains)
-  (including [grouped nodes](http://www.sudokuwiki.org/Grouped_X_Cycles))
 * [Dual unit forcing chains](http://www.sudokuwiki.org/Unit_Forcing_Chains)
-  (including [grouped nodes](http://www.sudokuwiki.org/Grouped_X_Cycles))
 * [Subset exclusion](http://www.sudokuwiki.org/Aligned_Pair_Exclusion) (incomplete)
 
 These strategies are insufficient to solve all boards. My intention is to
