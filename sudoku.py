@@ -656,7 +656,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		for cell in self.cells():
 			if cell.solved():
 				continue
-			seen = self.seen_from(cell.x, cell.y)
+			seen = self.seen_from(cell.x, cell.y) | {cell}
 			for d in cell.ds - set(cell.dcs):
 				d_colors = {c.dcs[d] for c in seen if d in c.dcs}
 				if len(d_colors) != 2:
@@ -760,8 +760,8 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
 		print_start = lambda: self._cell_forcing_chain_print_start(start_cell)
-		changed = (self._forcing_chain_check(print_start, Color.RED, verbose) or
-			self._forcing_chain_check(print_start, Color.BLUE, verbose))
+		changed = (self._forcing_chain_check_cell_contradictions(print_start, verbose) or
+			self._forcing_chain_check_unit_contradictions(print_start, verbose))
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
@@ -777,7 +777,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		if verbose:
 			print('Try dual unit forcing chains')
 		changed = False
-		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), range(9)):
+		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES):
 			num_solved = self.num_solved()
 			changed |= self.solve_unit_forcing_chain_at(unit_type, i, d, verbose)
 			if self.num_solved() > num_solved:
@@ -799,8 +799,8 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
 		print_start = lambda: self._unit_forcing_chain_print_start(unit_type, i, d)
-		changed = (self._forcing_chain_check(print_start, Color.RED, verbose) or
-			self._forcing_chain_check(print_start, Color.BLUE, verbose))
+		changed = (self._forcing_chain_check_cell_contradictions(print_start, verbose) or
+			self._forcing_chain_check_unit_contradictions(print_start, verbose))
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
@@ -840,21 +840,47 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 					colored = True
 		return colored
 
-	def _forcing_chain_check(self, print_start, color, verbose=False):
+	def _forcing_chain_check_cell_contradictions(self, print_start, verbose=False):
 		for cell in self.cells():
-			if cell.solved() or any(r & color for r in cell.dcs.values()):
+			if cell.dcs:
 				continue
 			seen = self.seen_from(cell.x, cell.y)
-			seen_colored = union(({d for d in c.dcs if c.dcs[d] & color} for c in seen))
-			candidates = cell.ds - seen_colored
-			if candidates:
+			seen_colors = {d: {c.dcs[d] for c in seen if d in c.dcs} for d in cell.ds}
+			seen_color = None
+			if all({Color.RED, Color.PURPLE} & seen_colors[d] for d in cell.ds):
+				seen_color = Color.RED
+			elif all({Color.BLUE, Color.PURPLE} & seen_colors[d] for d in cell.ds):
+				seen_color = Color.BLUE
+			else:
 				continue
 			if verbose:
 				print_start()
 				print(' > Find cells that can see all their candidates in the same color')
 				print(' * Cell %s can see all its candidates %s in %s' %
-					(cell.cell_name(), cell.value_string(), color))
-			return self._forcing_chain_use_color(~color, verbose)
+					(cell.cell_name(), cell.value_string(), seen_color))
+			return self._forcing_chain_use_color(~seen_color, verbose)
+		return False
+
+	def _forcing_chain_check_unit_contradictions(self, print_start, verbose=False):
+		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES):
+			unit = self.unit(unit_type, i)
+			colors = [c.dcs[d] for c in unit if d in c.dcs]
+			dup_color = Color.NEITHER
+			if colors.count(Color.RED) > 1 or Color.RED in colors and Color.PURPLE in colors:
+				dup_color = Color.RED
+			elif colors.count(Color.BLUE) > 1 or Color.BLUE in colors and Color.PURPLE in colors:
+				dup_color = Color.BLUE
+			else:
+				continue
+			if verbose:
+				print_start()
+				print(' > Find a unit with multiple cells with the same candidate in the same color')
+				dup_cell_names = [c.cell_name() for c in unit
+					if c.dcs.get(d, Color.NEITHER) & dup_color]
+				print(' > %s %s has multiple cells (%s) with candidate %d colored %s' %
+					(unit_type.capitalize(), self.unit_name(unit_type, i),
+						', '.join(dup_cell_names), d, dup_color))
+			return self._forcing_chain_use_color(~seen_color, verbose)
 		return False
 
 	def _forcing_chain_use_color(self, color, verbose=False):
