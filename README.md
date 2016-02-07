@@ -7,10 +7,12 @@ A Sudoku solver that uses human strategies.
 * [Unit intersections](http://www.sudokuwiki.org/Intersection_Removal) (a.k.a.
   pointing pairs and box+line reductions)
 * [X-wing](http://www.sudokuwiki.org/X_Wing_Strategy),
-  [Swordfish](http://www.sudokuwiki.org/Sword_Fish_Strategy), and
-  [Jellyfish](http://www.sudokuwiki.org/Jelly_Fish_Strategy)
+  [swordfish](http://www.sudokuwiki.org/Sword_Fish_Strategy), and
+  [jellyfish](http://www.sudokuwiki.org/Jelly_Fish_Strategy)
 * [3D Medusas](http://www.sudokuwiki.org/3D_Medusa) (a generalization of
   [simple coloring](http://www.sudokuwiki.org/Singles_Chains))
+* Dual Medusas (3D Medusas that start with a bi-location value in a unit instead
+  of a bi-value cell)
 * [Bi-value cell forcing chains](http://www.sudokuwiki.org/Cell_Forcing_Chains)
 * [Dual unit forcing chains](http://www.sudokuwiki.org/Unit_Forcing_Chains)
 * [Subset exclusion](http://www.sudokuwiki.org/Aligned_Pair_Exclusion) (incomplete)
@@ -18,7 +20,6 @@ A Sudoku solver that uses human strategies.
 These strategies are insufficient to solve all boards. My intention is to
 automate the strategies that I fully understand, since at that point doing them
 myself is just busy work.
-
 
 So far it can solve 99% of
 [these 49,152 17-hint Sudoku](http://staffhome.ecm.uwa.edu.au/~00013890/sudokumin.php)
