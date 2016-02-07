@@ -553,12 +553,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		while (self._3d_medusa_color_bi_value_cells(verbose) or
 			self._3d_medusa_color_bi_location_units(verbose)):
 			pass
-		changed = (self._3d_medusa_rule_1(start_cell, verbose) or
-			self._3d_medusa_rule_2(start_cell, verbose) or
-			self._3d_medusa_rule_3(start_cell, verbose) or
-			self._3d_medusa_rule_4(start_cell, verbose) or
-			self._3d_medusa_rule_5(start_cell, verbose) or
-			self._3d_medusa_rule_6(start_cell, verbose))
+		changed = (self._3d_medusa_check_cell_contradictions(start_cell, verbose) or
+			self._3d_medusa_check_unit_contradictions(start_cell, verbose) or
+			self._3d_medusa_check_seen_contradictions(start_cell, verbose))
+		if not changed:
+			changed |= self._3d_medusa_check_full_cells(start_cell, verbose)
+			changed |= self._3d_medusa_check_emptied_cells(start_cell, verbose)
+			changed |= self._3d_medusa_check_partial_cells(start_cell, verbose)
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
@@ -593,7 +594,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				colored = True
 		return colored
 
-	def _3d_medusa_rule_1(self, start_cell, verbose=False):
+	def _3d_medusa_check_cell_contradictions(self, start_cell, verbose=False):
 		for cell in self.cells():
 			colors = cell.dcs.values()
 			dup_color = None
@@ -612,7 +613,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return self._3d_medusa_eliminate_color(dup_color, verbose)
 		return False
 
-	def _3d_medusa_rule_2(self, start_cell, verbose=False):
+	def _3d_medusa_check_unit_contradictions(self, start_cell, verbose=False):
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES):
 			unit = self.unit(unit_type, i)
 			colors = [c.dcs[d] for c in unit if d in c.dcs]
@@ -634,7 +635,28 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return self._3d_medusa_eliminate_color(dup_color, verbose)
 		return False
 
-	def _3d_medusa_rule_3(self, start_cell, verbose=False):
+	def _3d_medusa_check_seen_contradictions(self, start_cell, verbose=False):
+		for cell in self.cells():
+			if cell.dcs:
+				continue
+			seen = self.seen_from(cell.x, cell.y)
+			seen_colors = {d: {c.dcs[d] for c in seen if d in c.dcs} for d in cell.ds}
+			seen_color = None
+			if all(Color.RED in seen_colors[d] for d in cell.ds):
+				seen_color = Color.RED
+			elif all(Color.BLUE in seen_colors[d] for d in cell.ds):
+				seen_color = Color.BLUE
+			else:
+				continue
+			if verbose:
+				self._3d_medusa_print_chain_start(start_cell)
+				print(' > Find cells that can see all their candidates in the same color')
+				print(' * Cell %s can see all its candidates %s in %s' %
+					(cell.cell_name(), cell.value_string(), seen_color))
+			return self._3d_medusa_eliminate_color(seen_color, verbose)
+		return False
+
+	def _3d_medusa_check_full_cells(self, start_cell, verbose=False):
 		changed = False
 		for cell in self.cells():
 			if len(set(cell.dcs.values())) != 2:
@@ -651,12 +673,12 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			changed |= cell_changed
 		return changed
 
-	def _3d_medusa_rule_4(self, start_cell, verbose=False):
+	def _3d_medusa_check_emptied_cells(self, start_cell, verbose=False):
 		changed = False
 		for cell in self.cells():
 			if cell.solved():
 				continue
-			seen = self.seen_from(cell.x, cell.y) | {cell}
+			seen = self.seen_from(cell.x, cell.y)
 			for d in cell.ds - set(cell.dcs):
 				d_colors = {c.dcs[d] for c in seen if d in c.dcs}
 				if len(d_colors) != 2:
@@ -671,7 +693,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				changed |= cell_changed
 		return changed
 
-	def _3d_medusa_rule_5(self, start_cell, verbose=False):
+	def _3d_medusa_check_partial_cells(self, start_cell, verbose=False):
 		changed = False
 		for cell in self.cells():
 			if len(cell.dcs) != 1:
@@ -692,27 +714,6 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 							d_color, d, ~d_color))
 				changed |= cell_changed
 		return changed
-
-	def _3d_medusa_rule_6(self, start_cell, verbose=False):
-		for cell in self.cells():
-			if cell.dcs:
-				continue
-			seen = self.seen_from(cell.x, cell.y)
-			seen_colors = {d: {c.dcs[d] for c in seen if d in c.dcs} for d in cell.ds}
-			seen_color = None
-			if all(Color.RED in seen_colors[d] for d in cell.ds):
-				seen_color = Color.RED
-			elif all(Color.BLUE in seen_colors[d] for d in cell.ds):
-				seen_color = Color.BLUE
-			else:
-				continue
-			if verbose:
-				self._3d_medusa_print_chain_start(start_cell)
-				print(' > Find cells that can see all their candidates in the same color')
-				print(' * Cell %s can see all its candidates %s in %s' %
-					(cell.cell_name(), cell.value_string(), seen_color))
-			return self._3d_medusa_eliminate_color(seen_color, verbose)
-		return False
 
 	def _3d_medusa_print_chain_start(self, start_cell):
 		p, q = sorted(start_cell.ds)
@@ -760,8 +761,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
 		print_start = lambda: self._cell_forcing_chain_print_start(start_cell)
-		changed = (self._forcing_chain_check_cell_contradictions(print_start, verbose) or
+		changed = (self._forcing_chain_check_seen_contradictions(print_start, verbose) or
 			self._forcing_chain_check_unit_contradictions(print_start, verbose))
+		if not changed:
+			changed |= self._forcing_chain_check_purple_cells(print_start, verbose)
+			changed |= self._forcing_chain_check_full_cells(print_start, verbose)
+			changed |= self._forcing_chain_check_emptied_cells(print_start, verbose)
+			changed |= self._forcing_chain_check_seen_cells(print_start, verbose)
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
@@ -799,8 +805,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
 		print_start = lambda: self._unit_forcing_chain_print_start(unit_type, i, d)
-		changed = (self._forcing_chain_check_cell_contradictions(print_start, verbose) or
+		changed = (self._forcing_chain_check_seen_contradictions(print_start, verbose) or
 			self._forcing_chain_check_unit_contradictions(print_start, verbose))
+		if not changed:
+			changed |= self._forcing_chain_check_purple_cells(print_start, verbose)
+			changed |= self._forcing_chain_check_full_cells(print_start, verbose)
+			changed |= self._forcing_chain_check_emptied_cells(print_start, verbose)
+			changed |= self._forcing_chain_check_seen_cells(print_start, verbose)
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
@@ -840,7 +851,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 					colored = True
 		return colored
 
-	def _forcing_chain_check_cell_contradictions(self, print_start, verbose=False):
+	def _forcing_chain_check_seen_contradictions(self, print_start, verbose=False):
 		for cell in self.cells():
 			if cell.dcs:
 				continue
@@ -895,6 +906,82 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				if verbose:
 					print(' * Cell %s can only be %s' % (cell.cell_name(),
 						cell.value_string()))
+		return changed
+
+	def _forcing_chain_check_purple_cells(self, print_start, verbose=False):
+		changed = False
+		for cell in self.cells():
+			if Color.PURPLE not in cell.dcs.values():
+				continue
+			d, = [d for d in cell.dcs if cell.dcs[d] == Color.PURPLE]
+			cell_changed = cell.include_only({d})
+			if verbose and cell_changed:
+				if not changed:
+					print_start()
+					print(' > Find cells with candidates colored purple')
+				p, q = sorted(cell.dcs)
+				print(' * Cell %s can only be %s, since %d is colored %s' %
+					(cell.cell_name(), cell.value_string(), d, Color.PURPLE))
+			changed |= cell_changed
+		return changed
+
+	def _forcing_chain_check_full_cells(self, print_start, verbose=False):
+		changed = False
+		for cell in self.cells():
+			if len(set(cell.dcs.values())) != 2:
+				continue
+			cell_changed = cell.include_only(cell.dcs.keys())
+			if verbose and cell_changed:
+				if not changed:
+					print_start()
+					print(' > Find cells with candidates in both colors and others uncolored')
+				p, q = sorted(cell.dcs)
+				print(' * Cell %s can only be %s, since %d is colored %s and %d is %s' %
+					(cell.cell_name(), cell.value_string(), p, cell.dcs[p],
+						q, cell.dcs[q]))
+			changed |= cell_changed
+		return changed
+
+	def _forcing_chain_check_emptied_cells(self, print_start, verbose=False):
+		changed = False
+		for cell in self.cells():
+			if cell.solved():
+				continue
+			seen = self.seen_from(cell.x, cell.y)
+			for d in cell.ds - set(cell.dcs):
+				d_colors = {c.dcs[d] for c in seen if d in c.dcs}
+				if len(d_colors) != 2:
+					continue
+				cell_changed = cell.exclude({d})
+				if verbose and cell_changed:
+					if not changed:
+						print_start()
+						print(' > Find cells with an uncolored candidate that can be seen in both colors')
+					print(' * Cell %s can only be %s, since it can see %d in both colors' %
+						(cell.cell_name(), cell.value_string(), d))
+				changed |= cell_changed
+		return changed
+
+	def _forcing_chain_check_seen_cells(self, print_start, verbose=False):
+		changed = False
+		for cell in self.cells():
+			if len(cell.dcs) != 1:
+				continue
+			d_colored = cell.dcs.keys()[0]
+			d_color = cell.dcs[d_colored]
+			seen = self.seen_from(cell.x, cell.y)
+			for d in cell.ds - {d_colored}:
+				if not any(c for c in seen if c.dcs.get(d, Color.NEITHER) & ~d_color):
+					continue
+				cell_changed = cell.exclude({d})
+				if verbose and cell_changed:
+					if not changed:
+						print_start()
+						print(' > Find cells with a candidate in one color that can see it in the other color')
+					print(' * Cell %s can only be %s, since its %d is %s and it can see %d in %s' %
+						(cell.cell_name(), cell.value_string(), d_colored,
+							d_color, d, ~d_color))
+				changed |= cell_changed
 		return changed
 
 	def solve_n_cell_subset_exclusion(self, n, verbose=False):
