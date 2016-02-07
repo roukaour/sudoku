@@ -4,8 +4,8 @@ A Sudoku solver that uses human strategies.
 
 * [Naked singles, pairs, triples, and quads](http://www.sudokuwiki.org/Naked_Candidates)
 * [Hidden singles, pairs, triples, and quads](http://www.sudokuwiki.org/Hidden_Candidates)
-* [Pointing pairs and triples](http://www.sudokuwiki.org/Intersection_Removal) and
-  [block+line reductions](http://www.sudokuwiki.org/Intersection_Removal)
+* [Unit intersection](http://www.sudokuwiki.org/Intersection_Removal) (a.k.a.
+  pointing pairs and box+line reductions)
 * [X-wing](http://www.sudokuwiki.org/X_Wing_Strategy),
   [Swordfish](http://www.sudokuwiki.org/Sword_Fish_Strategy), and
   [Jellyfish](http://www.sudokuwiki.org/Jelly_Fish_Strategy)
