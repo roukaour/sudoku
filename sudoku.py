@@ -315,7 +315,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 	def num_solved(self):
 		return len([c for c in self.cells() if c.solved()])
 
-	def solve_strip_naked_singles(self, verbose=False):
+	def solve_strip_naked_singles(self, verbose):
 		if self.solved():
 			return False
 		if verbose:
@@ -327,7 +327,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			print('...No naked singles found')
 		return changed
 
-	def solve_strip_naked_single(self, x, y, verbose=False):
+	def solve_strip_naked_single(self, x, y, verbose):
 		cell = self.cell(x, y)
 		if cell.solved():
 			return False
@@ -338,7 +338,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				cell.value_string()))
 		return changed
 
-	def solve_naked_n_tuples(self, n, verbose=False):
+	def solve_naked_n_tuples(self, n, verbose):
 		if self.solved():
 			return False
 		tuple_name = n_tuple_name(n)
@@ -351,7 +351,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			print('...No naked %ss found' % tuple_name)
 		return changed
 
-	def solve_naked_n_tuples_in_unit(self, unit_type, n, i, verbose=False):
+	def solve_naked_n_tuples_in_unit(self, unit_type, n, i, verbose):
 		changed = False
 		unit = self.unit(unit_type, i)
 		filtered_unit = [c for c in unit if len(c.ds) in range(2, n+1)]
@@ -372,7 +372,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						set_string(candidates)))
 		return changed
 
-	def solve_hidden_n_tuples(self, n, verbose=False):
+	def solve_hidden_n_tuples(self, n, verbose):
 		if self.solved():
 			return False
 		tuple_name = n_tuple_name(n)
@@ -385,7 +385,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			print('...No hidden %ss found' % tuple_name)
 		return changed
 
-	def solve_hidden_n_tuples_in_unit(self, unit_type, n, i, verbose=False):
+	def solve_hidden_n_tuples_in_unit(self, unit_type, n, i, verbose):
 		changed = False
 		unit = self.unit(unit_type, i)
 		filtered_unit = [c for c in unit if not c.solved()]
@@ -412,27 +412,19 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 							set_string(n_tuple_uniques)))
 		return changed
 
-	def solve_unit_intersection_removals(self, unit_type, verbose=False):
+	def solve_unit_intersections(self, verbose):
 		if self.solved():
 			return False
-		intersection_plurals = {
-			'row': "block+row reductions",
-			'column': "block+column reductions",
-			'block': 'pointing pairs/triples'}
-		intersection_plural = intersection_plurals[unit_type]
 		if verbose:
-			print('Try %s' % intersection_plural)
-		changed = False
-		for i in range(9):
-			num_solved = self.num_solved()
-			changed |= self.solve_unit_intersection_removals_in_unit(unit_type, i, verbose)
-			if self.num_solved() > num_solved:
+			print('Try unit intersections')
+		for unit_type, i in product(Sudoku.UNIT_TYPES, range(9)):
+			if self.solve_unit_intersections_in_unit(unit_type, i, verbose):
 				return True
-		if verbose and not changed:
-			print('...No %s found' % intersection_plural)
-		return changed
+		if verbose:
+			print('...No unit intersections found')
+		return False
 
-	def solve_unit_intersection_removals_in_unit(self, unit_type, i, verbose=False):
+	def solve_unit_intersections_in_unit(self, unit_type, i, verbose):
 		changed = False
 		unit = self.unit(unit_type, i)
 		for d in Cell.VALUES:
@@ -453,13 +445,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			if not intersection:
 				continue
 			intersection_changed = False
-			intersection_solved = []
+			intersection_changed_cells = []
 			for cell in intersection:
 				if cell in unit:
 					continue
 				cell_changed = cell.exclude({d})
-				if cell_changed and cell.solved():
-					intersection_solved.append(cell)
+				if cell_changed:
+					intersection_changed_cells.append(cell)
 				intersection_changed |= cell_changed
 			changed |= intersection_changed
 			if verbose and intersection_changed:
@@ -467,28 +459,25 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 					(unit_type, self.unit_name(unit_type, i),
 						n_tuple_name(len(filtered_unit)), intersection_type,
 						sample_cell.unit_name(intersection_type), d))
-				for cell in intersection_solved:
+				for cell in intersection_changed_cells:
 					print('    > Cell %s can only be %s' %
-						(cell.cell_name(), cell.value()))
+						(cell.cell_name(), cell.value_string()))
 		return changed
 
-	def solve_n_fish(self, n, verbose=False):
+	def solve_n_fish(self, n, verbose):
 		if self.solved():
 			return False
 		n_fish_name = {2: 'X-wing', 3: 'swordfish', 4: 'jellyfish'}[n]
 		if verbose:
 			print('Try %s patterns' % n_fish_name)
-		changed = False
 		for unit_type, indexes in product(['row', 'column'], combinations(range(9), n)):
-			num_solved = self.num_solved()
-			changed |= self.solve_n_fish_in_units(unit_type, n, indexes, verbose)
-			if self.num_solved() > num_solved:
+			if self.solve_n_fish_in_units(unit_type, n, indexes, verbose):
 				return True
-		if verbose and not changed:
+		if verbose:
 			print('...No %s patterns found' % n_fish_name)
-		return changed
+		return False
 
-	def solve_n_fish_in_units(self, unit_type, n, indexes, verbose=False):
+	def solve_n_fish_in_units(self, unit_type, n, indexes, verbose):
 		changed = False
 		units = [self.unit(unit_type, i) for i in indexes]
 		for d in Cell.VALUES:
@@ -529,22 +518,19 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						(cell.cell_name(), cell.value()))
 		return changed
 
-	def solve_3d_medusas(self, verbose=False):
+	def solve_3d_medusas(self, verbose):
 		if self.solved():
 			return False
 		if verbose:
 			print('Try coloring 3D Medusas')
-		changed = False
 		for y, x in product(range(9), range(9)):
-			num_solved = self.num_solved()
-			changed |= self.solve_3d_medusas_from(x, y, verbose)
-			if self.num_solved() > num_solved:
+			if self.solve_3d_medusas_from(x, y, verbose):
 				return True
-		if verbose and not changed:
+		if verbose:
 			print('...No 3D Medusas found')
-		return changed
+		return False
 
-	def solve_3d_medusas_from(self, x, y, verbose=False):
+	def solve_3d_medusas_from(self, x, y, verbose):
 		start_cell = self.cell(x, y)
 		if not start_cell.bi_value():
 			return False
@@ -553,18 +539,21 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		while (self._3d_medusa_color_bi_value_cells(verbose) or
 			self._3d_medusa_color_bi_location_units(verbose)):
 			pass
-		changed = (self._3d_medusa_check_cell_contradictions(start_cell, verbose) or
-			self._3d_medusa_check_unit_contradictions(start_cell, verbose) or
-			self._3d_medusa_check_seen_contradictions(start_cell, verbose))
+		print_start = lambda: (self._3d_medusa_print_chain_start(start_cell), print(self))
+		changed = (self._3d_medusa_check_cell_contradictions(print_start, verbose) or
+			self._3d_medusa_check_unit_contradictions(print_start, verbose) or
+			self._3d_medusa_check_seen_contradictions(print_start, verbose))
 		if not changed:
-			changed |= self._3d_medusa_check_full_cells(start_cell, verbose)
-			changed |= self._3d_medusa_check_emptied_cells(start_cell, verbose)
-			changed |= self._3d_medusa_check_partial_cells(start_cell, verbose)
+			changed |= self._3d_medusa_check_full_cells(print_start, verbose)
+			if changed: print_start = lambda: None
+			changed |= self._3d_medusa_check_emptied_cells(print_start, verbose)
+			if changed: print_start = lambda: None
+			changed |= self._3d_medusa_check_partial_cells(print_start, verbose)
 		for cell in self.cells():
 			cell.dcs = {}
 		return changed
 
-	def _3d_medusa_color_bi_value_cells(self, verbose=False):
+	def _3d_medusa_color_bi_value_cells(self, verbose):
 		colored = False
 		for cell in self.cells():
 			if not cell.bi_value() or len(cell.dcs) != 1:
@@ -576,7 +565,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			colored = True
 		return colored
 
-	def _3d_medusa_color_bi_location_units(self, verbose=False):
+	def _3d_medusa_color_bi_location_units(self, verbose):
 		colored = False
 		for unit_type, i in product(Sudoku.UNIT_TYPES, range(9)):
 			unit = self.unit(unit_type, i)
@@ -594,7 +583,12 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				colored = True
 		return colored
 
-	def _3d_medusa_check_cell_contradictions(self, start_cell, verbose=False):
+	def _3d_medusa_print_chain_start(self, start_cell):
+		p, q = sorted(start_cell.ds)
+		print(' - Start chains from cell %s, coloring %d %s and %d %s' %
+			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
+
+	def _3d_medusa_check_cell_contradictions(self, print_start, verbose):
 		for cell in self.cells():
 			colors = cell.dcs.values()
 			dup_color = None
@@ -605,15 +599,15 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			else:
 				continue
 			if verbose:
-				self._3d_medusa_print_chain_start(start_cell)
-				print(' > Find a cell with multiple candidates in the same color')
+				print_start()
+				print(' - Find a cell with multiple candidates in the same color')
 				dup_candidates = {d for d in cell.dcs if cell.dcs[d] == dup_color}
-				print(' > Cell %s has multiple candidates %s colored %s' %
+				print(' - Cell %s has multiple candidates %s colored %s' %
 					(cell.cell_name(), set_string(dup_candidates), dup_color))
 			return self._3d_medusa_eliminate_color(dup_color, verbose)
 		return False
 
-	def _3d_medusa_check_unit_contradictions(self, start_cell, verbose=False):
+	def _3d_medusa_check_unit_contradictions(self, print_start, verbose):
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES):
 			unit = self.unit(unit_type, i)
 			colors = [c.dcs[d] for c in unit if d in c.dcs]
@@ -625,17 +619,17 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			else:
 				continue
 			if verbose:
-				self._3d_medusa_print_chain_start(start_cell)
-				print(' > Find a unit with multiple cells with the same candidate in the same color')
+				print_start()
+				print(' - Find a unit with multiple cells with the same candidate in the same color')
 				dup_cell_names = [c.cell_name() for c in unit
 					if c.dcs.get(d, Color.NEITHER) == dup_color]
-				print(' > %s %s has multiple cells (%s) with candidate %d colored %s' %
+				print(' - %s %s has multiple cells (%s) with candidate %d colored %s' %
 					(unit_type.capitalize(), self.unit_name(unit_type, i),
 						', '.join(dup_cell_names), d, dup_color))
 			return self._3d_medusa_eliminate_color(dup_color, verbose)
 		return False
 
-	def _3d_medusa_check_seen_contradictions(self, start_cell, verbose=False):
+	def _3d_medusa_check_seen_contradictions(self, print_start, verbose):
 		for cell in self.cells():
 			if cell.dcs:
 				continue
@@ -649,14 +643,28 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			else:
 				continue
 			if verbose:
-				self._3d_medusa_print_chain_start(start_cell)
-				print(' > Find cells that can see all their candidates in the same color')
+				print_start()
+				print(' - Find cells that can see all their candidates in the same color')
 				print(' * Cell %s can see all its candidates %s in %s' %
 					(cell.cell_name(), cell.value_string(), seen_color))
 			return self._3d_medusa_eliminate_color(seen_color, verbose)
 		return False
 
-	def _3d_medusa_check_full_cells(self, start_cell, verbose=False):
+	def _3d_medusa_eliminate_color(self, color, verbose):
+		if verbose:
+			print(' - Eliminate all candidates colored %s' % color)
+		changed = False
+		for cell in self.cells():
+			for d in cell.dcs:
+				if cell.dcs[d] != color:
+					continue
+				changed |= cell.exclude({d})
+				if verbose:
+					print('    * Cell %s can only be %s' % (cell.cell_name(),
+						cell.value_string()))
+		return changed
+
+	def _3d_medusa_check_full_cells(self, print_start, verbose):
 		changed = False
 		for cell in self.cells():
 			if len(set(cell.dcs.values())) != 2:
@@ -664,16 +672,14 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			cell_changed = cell.include_only(cell.dcs.keys())
 			if verbose and cell_changed:
 				if not changed:
-					self._3d_medusa_print_chain_start(start_cell)
-					print(' > Find cells with candidates in both colors and others uncolored')
-				p, q = sorted(cell.dcs)
-				print(' * Cell %s can only be %s, since %d is colored %s and %d is %s' %
-					(cell.cell_name(), cell.value_string(), p, cell.dcs[p],
-						q, cell.dcs[q]))
+					print_start()
+					print(' - Find cells with candidates in both colors and others uncolored')
+				print('    * Cell %s can only be %s' % (cell.cell_name(),
+					cell.value_string()))
 			changed |= cell_changed
 		return changed
 
-	def _3d_medusa_check_emptied_cells(self, start_cell, verbose=False):
+	def _3d_medusa_check_emptied_cells(self, print_start, verbose):
 		changed = False
 		for cell in self.cells():
 			if cell.solved():
@@ -686,14 +692,14 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				cell_changed = cell.exclude({d})
 				if verbose and cell_changed:
 					if not changed:
-						self._3d_medusa_print_chain_start(start_cell)
-						print(' > Find cells with an uncolored candidate that can be seen in both colors')
-					print(' * Cell %s can only be %s, since it can see %d in both colors' %
+						print_start()
+						print(' - Find cells with an uncolored candidate that can be seen in both colors')
+					print('    * Cell %s can only be %s, since it can see %d in both colors' %
 						(cell.cell_name(), cell.value_string(), d))
 				changed |= cell_changed
 		return changed
 
-	def _3d_medusa_check_partial_cells(self, start_cell, verbose=False):
+	def _3d_medusa_check_partial_cells(self, print_start, verbose):
 		changed = False
 		for cell in self.cells():
 			if len(cell.dcs) != 1:
@@ -707,49 +713,27 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				cell_changed = cell.exclude({d})
 				if verbose and cell_changed:
 					if not changed:
-						self._3d_medusa_print_chain_start(start_cell)
-						print(' > Find cells with a candidate in one color that can see it in the other color')
-					print(' * Cell %s can only be %s, since its %d is %s and it can see %d in %s' %
+						print_start()
+						print(' - Find cells with a candidate in one color that can see it in the other color')
+					print('    * Cell %s can only be %s, since its %d is %s and it can see %d in %s' %
 						(cell.cell_name(), cell.value_string(), d_colored,
 							d_color, d, ~d_color))
 				changed |= cell_changed
 		return changed
 
-	def _3d_medusa_print_chain_start(self, start_cell):
-		p, q = sorted(start_cell.ds)
-		print(' > Start chains from cell %s, coloring %d %s and %d %s' %
-			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
-
-	def _3d_medusa_eliminate_color(self, color, verbose=False):
-		if verbose:
-			print(' > Eliminate all candidates colored %s' % color)
-		changed = False
-		for cell in self.cells():
-			for d in cell.dcs:
-				if cell.dcs[d] != color:
-					continue
-				changed |= cell.exclude({d})
-				if verbose:
-					print(' * Cell %s can only be %s' % (cell.cell_name(),
-						cell.value_string()))
-		return changed
-
-	def solve_cell_forcing_chains(self, verbose=False):
+	def solve_cell_forcing_chains(self, verbose):
 		if self.solved():
 			return False
 		if verbose:
 			print('Try bi-value cell forcing chains')
-		changed = False
 		for y, x in product(range(9), range(9)):
-			num_solved = self.num_solved()
-			changed |= self.solve_cell_forcing_chain_at(x, y, verbose)
-			if self.num_solved() > num_solved:
+			if self.solve_cell_forcing_chain_at(x, y, verbose):
 				return True
-		if verbose and not changed:
+		if verbose:
 			print('...No bi-value cell forcing chains found')
-		return changed
+		return False
 
-	def solve_cell_forcing_chain_at(self, x, y, verbose=False):
+	def solve_cell_forcing_chain_at(self, x, y, verbose):
 		start_cell = self.cell(x, y)
 		if not start_cell.bi_value():
 			return False
@@ -760,13 +744,16 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			self._forcing_chain_propagate_hidden_color(Color.RED, verbose) or
 			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
-		print_start = lambda: self._cell_forcing_chain_print_start(start_cell)
+		print_start = lambda: (self._cell_forcing_chain_print_start(start_cell), print(self))
 		changed = (self._forcing_chain_check_seen_contradictions(print_start, verbose) or
 			self._forcing_chain_check_unit_contradictions(print_start, verbose))
 		if not changed:
 			changed |= self._forcing_chain_check_purple_cells(print_start, verbose)
+			if changed: print_start = lambda: None
 			changed |= self._forcing_chain_check_full_cells(print_start, verbose)
+			if changed: print_start = lambda: None
 			changed |= self._forcing_chain_check_emptied_cells(print_start, verbose)
+			if changed: print_start = lambda: None
 			changed |= self._forcing_chain_check_seen_cells(print_start, verbose)
 		for cell in self.cells():
 			cell.dcs = {}
@@ -774,25 +761,22 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 
 	def _cell_forcing_chain_print_start(self, start_cell):
 		p, q = sorted(start_cell.ds)
-		print(' > Start from cell %s, coloring %d %s and %d %s' %
+		print(' - Start from cell %s, coloring %d %s and %d %s' %
 			(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
 
-	def solve_unit_forcing_chains(self, verbose=False):
+	def solve_unit_forcing_chains(self, verbose):
 		if self.solved():
 			return False
 		if verbose:
 			print('Try dual unit forcing chains')
-		changed = False
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES):
-			num_solved = self.num_solved()
-			changed |= self.solve_unit_forcing_chain_at(unit_type, i, d, verbose)
-			if self.num_solved() > num_solved:
+			if self.solve_unit_forcing_chain_at(unit_type, i, d, verbose):
 				return True
-		if verbose and not changed:
+		if verbose:
 			print('...No dual unit forcing chains found')
-		return changed
+		return False
 
-	def solve_unit_forcing_chain_at(self, unit_type, i, d, verbose=False):
+	def solve_unit_forcing_chain_at(self, unit_type, i, d, verbose):
 		unit = self.unit(unit_type, i)
 		start_cells = [c for c in unit if d in c.ds]
 		if len(start_cells) != 2:
@@ -804,13 +788,16 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			self._forcing_chain_propagate_hidden_color(Color.RED, verbose) or
 			self._forcing_chain_propagate_hidden_color(Color.BLUE, verbose)):
 			pass
-		print_start = lambda: self._unit_forcing_chain_print_start(unit_type, i, d)
+		print_start = lambda: (self._unit_forcing_chain_print_start(unit_type, i, d), print(self))
 		changed = (self._forcing_chain_check_seen_contradictions(print_start, verbose) or
 			self._forcing_chain_check_unit_contradictions(print_start, verbose))
 		if not changed:
 			changed |= self._forcing_chain_check_purple_cells(print_start, verbose)
+			if changed: print_start = lambda: None
 			changed |= self._forcing_chain_check_full_cells(print_start, verbose)
+			if changed: print_start = lambda: None
 			changed |= self._forcing_chain_check_emptied_cells(print_start, verbose)
+			if changed: print_start = lambda: None
 			changed |= self._forcing_chain_check_seen_cells(print_start, verbose)
 		for cell in self.cells():
 			cell.dcs = {}
@@ -820,11 +807,11 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		unit = self.unit(unit_type, i)
 		start_cells = [c for c in unit if d in c.ds]
 		start_red, start_blue = sorted(start_cells)
-		print(' > Start from %s %s, coloring %d %s in cell %s and %s in cell %s' %
+		print(' - Start from %s %s, coloring %d %s in cell %s and %s in cell %s' %
 			(unit_type, self.unit_name(unit_type, i), d, start_red.dcs[d],
 				start_red.cell_name(), start_blue.dcs[d], start_blue.cell_name()))
 
-	def _forcing_chain_propagate_naked_color(self, color, verbose=False):
+	def _forcing_chain_propagate_naked_color(self, color, verbose):
 		colored = False
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
@@ -838,7 +825,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				colored = True
 		return colored
 
-	def _forcing_chain_propagate_hidden_color(self, color, verbose=False):
+	def _forcing_chain_propagate_hidden_color(self, color, verbose):
 		colored = False
 		for cell in self.cells():
 			if cell.solved() or any(r & color for r in cell.dcs.values()):
@@ -851,7 +838,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 					colored = True
 		return colored
 
-	def _forcing_chain_check_seen_contradictions(self, print_start, verbose=False):
+	def _forcing_chain_check_seen_contradictions(self, print_start, verbose):
 		for cell in self.cells():
 			if cell.dcs:
 				continue
@@ -866,13 +853,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				continue
 			if verbose:
 				print_start()
-				print(' > Find cells that can see all their candidates in the same color')
+				print(' - Find cells that can see all their candidates in the same color')
 				print(' * Cell %s can see all its candidates %s in %s' %
 					(cell.cell_name(), cell.value_string(), seen_color))
 			return self._forcing_chain_use_color(~seen_color, verbose)
 		return False
 
-	def _forcing_chain_check_unit_contradictions(self, print_start, verbose=False):
+	def _forcing_chain_check_unit_contradictions(self, print_start, verbose):
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES):
 			unit = self.unit(unit_type, i)
 			colors = [c.dcs[d] for c in unit if d in c.dcs]
@@ -885,18 +872,18 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				continue
 			if verbose:
 				print_start()
-				print(' > Find a unit with multiple cells with the same candidate in the same color')
+				print(' - Find a unit with multiple cells with the same candidate in the same color')
 				dup_cell_names = [c.cell_name() for c in unit
 					if c.dcs.get(d, Color.NEITHER) & dup_color]
-				print(' > %s %s has multiple cells (%s) with candidate %d colored %s' %
+				print(' - %s %s has multiple cells (%s) with candidate %d colored %s' %
 					(unit_type.capitalize(), self.unit_name(unit_type, i),
 						', '.join(dup_cell_names), d, dup_color))
 			return self._forcing_chain_use_color(~seen_color, verbose)
 		return False
 
-	def _forcing_chain_use_color(self, color, verbose=False):
+	def _forcing_chain_use_color(self, color, verbose):
 		if verbose:
-			print(' > Use all candidates colored %s' % color)
+			print(' - Use all candidates colored %s' % color)
 		changed = False
 		for cell in self.cells():
 			for d in cell.dcs:
@@ -908,7 +895,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						cell.value_string()))
 		return changed
 
-	def _forcing_chain_check_purple_cells(self, print_start, verbose=False):
+	def _forcing_chain_check_purple_cells(self, print_start, verbose):
 		changed = False
 		for cell in self.cells():
 			if Color.PURPLE not in cell.dcs.values():
@@ -918,14 +905,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			if verbose and cell_changed:
 				if not changed:
 					print_start()
-					print(' > Find cells with candidates colored purple')
-				p, q = sorted(cell.dcs)
-				print(' * Cell %s can only be %s, since %d is colored %s' %
-					(cell.cell_name(), cell.value_string(), d, Color.PURPLE))
+					print(' - Find cells with candidates colored purple')
+				print('    > Cell %s can only be %s' % (cell.cell_name(),
+					cell.value_string()))
 			changed |= cell_changed
 		return changed
 
-	def _forcing_chain_check_full_cells(self, print_start, verbose=False):
+	def _forcing_chain_check_full_cells(self, print_start, verbose):
 		changed = False
 		for cell in self.cells():
 			if len(set(cell.dcs.values())) != 2:
@@ -934,15 +920,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			if verbose and cell_changed:
 				if not changed:
 					print_start()
-					print(' > Find cells with candidates in both colors and others uncolored')
-				p, q = sorted(cell.dcs)
-				print(' * Cell %s can only be %s, since %d is colored %s and %d is %s' %
-					(cell.cell_name(), cell.value_string(), p, cell.dcs[p],
-						q, cell.dcs[q]))
+					print(' - Find cells with candidates in both colors and others uncolored')
+				print('    > Cell %s can only be %s' % (cell.cell_name(),
+					cell.value_string()))
 			changed |= cell_changed
 		return changed
 
-	def _forcing_chain_check_emptied_cells(self, print_start, verbose=False):
+	def _forcing_chain_check_emptied_cells(self, print_start, verbose):
 		changed = False
 		for cell in self.cells():
 			if cell.solved():
@@ -956,13 +940,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				if verbose and cell_changed:
 					if not changed:
 						print_start()
-						print(' > Find cells with an uncolored candidate that can be seen in both colors')
-					print(' * Cell %s can only be %s, since it can see %d in both colors' %
+						print(' - Find cells with an uncolored candidate that can be seen in both colors')
+					print('    * Cell %s can only be %s, since it can see %d in both colors' %
 						(cell.cell_name(), cell.value_string(), d))
 				changed |= cell_changed
 		return changed
 
-	def _forcing_chain_check_seen_cells(self, print_start, verbose=False):
+	def _forcing_chain_check_seen_cells(self, print_start, verbose):
 		changed = False
 		for cell in self.cells():
 			if len(cell.dcs) != 1:
@@ -977,14 +961,14 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				if verbose and cell_changed:
 					if not changed:
 						print_start()
-						print(' > Find cells with a candidate in one color that can see it in the other color')
-					print(' * Cell %s can only be %s, since its %d is %s and it can see %d in %s' %
+						print(' - Find cells with a candidate in one color that can see it in the other color')
+					print('    * Cell %s can only be %s, since its %d is %s and it can see %d in %s' %
 						(cell.cell_name(), cell.value_string(), d_colored,
 							d_color, d, ~d_color))
 				changed |= cell_changed
 		return changed
 
-	def solve_n_cell_subset_exclusion(self, n, verbose=False):
+	def solve_n_cell_subset_exclusion(self, n, verbose):
 		if self.solved():
 			return False
 		if verbose:
@@ -1008,7 +992,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			print('...No %d-cell subset exclusions found' % n)
 		return False
 
-	def solve_methods(self, verbose=False):
+	def solve_methods(self, verbose):
 		if self.solved():
 			return 0
 		if self.solve_strip_naked_singles(verbose):
@@ -1020,9 +1004,8 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				return n * 2 - 1
 			if self.solve_hidden_n_tuples(n, verbose):
 				return n * 2
-		for unit_type in Sudoku.UNIT_TYPES:
-			if self.solve_unit_intersection_removals(unit_type, verbose):
-				return 9
+		if self.solve_unit_intersections(verbose):
+			return 9
 		for n in range(2, 5):
 			if self.solve_n_fish(n, verbose):
 				return 8 + n
