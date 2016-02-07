@@ -521,6 +521,89 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						(cell.cell_name(), cell.value()))
 		return changed
 
+	def solve_y_wings(self, verbose):
+		if self.solved():
+			return False
+		if verbose:
+			print('Try Y-wings')
+		for y, x in product(range(9), range(9)):
+			if self.solve_y_wing_from(x, y, verbose):
+				return True
+		if verbose:
+			print('...No Y-wings found')
+		return False
+
+	def solve_y_wing_from(self, x, y, verbose):
+		hinge = self.cell(x, y)
+		if not hinge.bi_value():
+			return False
+		p, q = sorted(hinge.ds)
+		seen = self.seen_from(hinge.x, hinge.y)
+		for r in Cell.VALUES:
+			if r in [p, q]:
+				continue
+			wing1s = [c for c in seen if c.ds == {p, r}]
+			wing2s = [c for c in seen if c.ds == {q, r}]
+			for wing1, wing2 in product(wing1s, wing2s):
+				cells = self.seen_from(wing1.x, wing1.y)
+				if wing2 in cells:
+					continue
+				cells &= self.seen_from(wing2.x, wing2.y)
+				cells = [c for c in cells if not c.solved() and r in c.ds]
+				if not cells:
+					continue
+				if verbose:
+					print(' - Y-wing with hinge at cell %s %s and wings at %s %s and %s %s' %
+						(hinge.cell_name(), hinge.value_string(), wing1.cell_name(),
+						wing1.value_string(), wing2.cell_name(), wing2.value_string()))
+				for cell in cells:
+					cell.exclude({r})
+					print('    > Cell %s can only be %s' %
+						(cell.cell_name(), cell.value_string()))
+				return True
+		return False
+
+	def solve_xyz_wings(self, verbose):
+		if self.solved():
+			return False
+		if verbose:
+			print('Try XYZ-wings')
+		for y, x in product(range(9), range(9)):
+			if self.solve_xyz_wing_from(x, y, verbose):
+				return True
+		if verbose:
+			print('...No XYZ-wings found')
+		return False
+
+	def solve_xyz_wing_from(self, x, y, verbose):
+		hinge = self.cell(x, y)
+		if len(hinge.ds) != 3:
+			return False
+		seen = self.seen_from(hinge.x, hinge.y)
+		for r in sorted(hinge.ds):
+			p, q = sorted(hinge.ds - {r})
+			wing1s = [c for c in seen if c.ds == {p, r}]
+			wing2s = [c for c in seen if c.ds == {q, r}]
+			for wing1, wing2 in product(wing1s, wing2s):
+				cells = self.seen_from(wing1.x, wing1.y)
+				if wing2 in cells:
+					continue
+				cells &= self.seen_from(wing2.x, wing2.y)
+				cells &= self.seen_from(hinge.x, hinge.y)
+				cells = [c for c in cells if not c.solved() and r in c.ds]
+				if not cells:
+					continue
+				if verbose:
+					print(' - XYZ-wing with hinge at cell %s %s and wings at %s %s and %s %s' %
+						(hinge.cell_name(), hinge.value_string(), wing1.cell_name(),
+						wing1.value_string(), wing2.cell_name(), wing2.value_string()))
+				for cell in cells:
+					cell.exclude({r})
+					print('    > Cell %s can only be %s' %
+						(cell.cell_name(), cell.value_string()))
+				return True
+		return False
+
 	def solve_3d_medusas(self, verbose):
 		if self.solved():
 			return False
@@ -1060,14 +1143,18 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		for n in range(2, 5):
 			if self.solve_n_fish(n, verbose):
 				return 8 + n
-		if self.solve_3d_medusas(verbose):
+		if self.solve_y_wings(verbose):
 			return 13
-		if self.solve_dual_medusas(verbose):
+		if self.solve_xyz_wings(verbose):
 			return 14
-		if self.solve_cell_forcing_chains(verbose):
+		if self.solve_3d_medusas(verbose):
 			return 15
-		if self.solve_unit_forcing_chains(verbose):
+		if self.solve_dual_medusas(verbose):
 			return 16
+		if self.solve_cell_forcing_chains(verbose):
+			return 17
+		if self.solve_unit_forcing_chains(verbose):
+			return 18
 		for n in range(2, 4): # larger subsets are too slow
 			if self.solve_n_cell_subset_exclusion(n, verbose):
 				return 17 + n
@@ -1077,8 +1164,8 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		method_names = ['nothing', 'naked singles', 'hidden singles',
 			'naked pairs', 'hidden pairs', 'naked triples', 'hidden triples',
 			'naked quads', 'hidden quads', 'unit intersections', 'X-wings',
-			'swordfish', 'jellyfish', '3D Medusas', 'dual Medusas',
-			'bi-value cell forcing chains', 'dual unit forcing chains',
+			'swordfish', 'jellyfish', 'Y-wings', 'XYZ-wings', '3D Medusas',
+			'dual Medusas', 'bi-value cell forcing chains', 'dual unit forcing chains',
 			'2-cell subset exclusion', '3-cell subset exclusion']
 		return method_names[difficulty]
 

@@ -6,9 +6,11 @@ A Sudoku solver that uses human strategies.
 * [Hidden singles, pairs, triples, and quads](http://www.sudokuwiki.org/Hidden_Candidates)
 * [Unit intersections](http://www.sudokuwiki.org/Intersection_Removal) (a.k.a.
   pointing pairs and box+line reductions)
-* [X-wing](http://www.sudokuwiki.org/X_Wing_Strategy),
+* [X-wings](http://www.sudokuwiki.org/X_Wing_Strategy),
   [swordfish](http://www.sudokuwiki.org/Sword_Fish_Strategy), and
   [jellyfish](http://www.sudokuwiki.org/Jelly_Fish_Strategy)
+* [Y-wings](http://www.sudokuwiki.org/Y_Wing_Strategy) (a.k.a. XY-wings) and
+  [XYZ-wings](http://www.sudokuwiki.org/XYZ_Wing)
 * [3D Medusas](http://www.sudokuwiki.org/3D_Medusa) (a generalization of
   [simple coloring](http://www.sudokuwiki.org/Singles_Chains))
 * Dual Medusas (3D Medusas that start with a bi-location value in a unit instead
