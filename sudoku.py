@@ -660,7 +660,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 					continue
 				changed |= cell.exclude({d})
 				if verbose:
-					print('    * Cell %s can only be %s' % (cell.cell_name(),
+					print('    > Cell %s can only be %s' % (cell.cell_name(),
 						cell.value_string()))
 		return changed
 
