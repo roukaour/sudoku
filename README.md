@@ -21,10 +21,11 @@ These strategies are insufficient to solve all boards. My intention is to
 automate the strategies that I fully understand, since at that point doing them
 myself is just busy work.
 
-So far it can solve 99% of
+So far it can solve 99.1% of
 [these 49,152 17-hint Sudoku](http://staffhome.ecm.uwa.edu.au/~00013890/sudokumin.php)
 (only 438 are unsolvable). With the
 [puzzles chosen by Peter Norvig](http://norvig.com/sudoku.html),
 it can solve all 50 of the easy ones, 58 of the 95 hard ones, and 8 of the 11
-hardest ones. All of the [AI Sudoku Top 10](http://www.aisudoku.com/en/AIwME.html)
+hardest ones. However, all of the
+[AI Sudoku Top 10](http://www.aisudoku.com/en/AIwME.html)
 are unsolvable.
