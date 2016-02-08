@@ -1106,15 +1106,14 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		if verbose:
 			print('Try Nishio forcing chains')
-		for y, x in product(range(9), range(9)):
-			if self.solve_nishio_forcing_chain_from(x, y, verbose):
+		for start_cell in sorted(self.cells(), key=lambda c: (len(c.ds), c)):
+			if self.solve_nishio_forcing_chain_from(start_cell, verbose):
 				return True
 		if verbose:
 			print('...No Nishio forcing chains found')
 		return False
 
-	def solve_nishio_forcing_chain_from(self, x, y, verbose):
-		start_cell = self.cell(x, y)
+	def solve_nishio_forcing_chain_from(self, start_cell, verbose):
 		if start_cell.solved():
 			return False
 		for d in start_cell.ds:
@@ -1145,15 +1144,14 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return False
 		if verbose:
 			print('Try anti-Nishio forcing chains')
-		for y, x in product(range(9), range(9)):
-			if self.solve_anti_nishio_forcing_chain_from(x, y, verbose):
+		for start_cell in sorted(self.cells(), key=lambda c: (len(c.ds), c)):
+			if self.solve_anti_nishio_forcing_chain_from(start_cell, verbose):
 				return True
 		if verbose:
 			print('...No anti-Nishio forcing chains found')
 		return False
 
-	def solve_anti_nishio_forcing_chain_from(self, x, y, verbose):
-		start_cell = self.cell(x, y)
+	def solve_anti_nishio_forcing_chain_from(self, start_cell, verbose):
 		if start_cell.solved():
 			return False
 		for d in start_cell.ds:
@@ -1361,10 +1359,18 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		return self.method_name(difficulty)
 
 def main():
-	if len(sys.argv) > 1:
+	s = None
+	if len(sys.argv) == 2:
 		s = Sudoku(sys.argv[1])
-		s.solve(verbose=True)
+		verbose = True
+	elif len(sys.argv) == 3:
+		s = Sudoku(sys.argv[2])
+		verbose = sys.argv[1] != '-q'
+	if s:
+		s.solve(verbose=verbose)
 		s.verify()
+	else:
+		print('Usage: %s [-q] BOARD' % sys.argv[0])
 
 if __name__ == '__main__':
 	main()
