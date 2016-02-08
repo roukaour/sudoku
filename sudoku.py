@@ -3,6 +3,7 @@
 from __future__ import print_function
 
 from itertools import product, combinations
+from collections import defaultdict
 import sys
 
 def flatten(L):
@@ -558,8 +559,9 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						wing1.value_string(), wing2.cell_name(), wing2.value_string()))
 				for cell in cells:
 					cell.exclude({r})
-					print('    > Cell %s can only be %s' %
-						(cell.cell_name(), cell.value_string()))
+					if verbose:
+						print('    > Cell %s can only be %s' %
+							(cell.cell_name(), cell.value_string()))
 				return True
 		return False
 
@@ -599,8 +601,9 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 						wing1.value_string(), wing2.cell_name(), wing2.value_string()))
 				for cell in cells:
 					cell.exclude({r})
-					print('    > Cell %s can only be %s' %
-						(cell.cell_name(), cell.value_string()))
+					if verbose:
+						print('    > Cell %s can only be %s' %
+							(cell.cell_name(), cell.value_string()))
 				return True
 		return False
 
@@ -963,10 +966,6 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			seen = self.seen_from(cell.x, cell.y)
 			for unit_type, d in product(Sudoku.UNIT_TYPES, cell.ds):
 				seen_unit = self.unit_without(unit_type, cell.x, cell.y)
-				# TODO: implement grouped nodes
-				#if all(c.dcs.get(d, Color.NEITHER) == ~color or
-				#	any(c2.dcs.get(d, Color.NEITHER) & color for c2 in
-				#		self.seen_from(c.x, c.y)) for c in seen_unit if d in c.ds):
 				if all(c.dcs.get(d, Color.NEITHER) == ~color for c in seen_unit):
 					cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | color
 					colored = True
@@ -1102,6 +1101,166 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 				changed |= cell_changed
 		return changed
 
+	def solve_nishio_forcing_chains(self, verbose):
+		if self.solved():
+			return False
+		if verbose:
+			print('Try Nishio forcing chains')
+		for y, x in product(range(9), range(9)):
+			if self.solve_nishio_forcing_chain_from(x, y, verbose):
+				return True
+		if verbose:
+			print('...No Nishio forcing chains found')
+		return False
+
+	def solve_nishio_forcing_chain_from(self, x, y, verbose):
+		start_cell = self.cell(x, y)
+		if start_cell.solved():
+			return False
+		for d in start_cell.ds:
+			start_cell.dcs[d] = Color.BLUE
+			while (self._nishio_forcing_chain_propagate_on(verbose) or
+				self._nishio_forcing_chain_propagate_off(verbose)):
+				pass
+			print_start = lambda: (self._nishio_forcing_chain_print_start(start_cell, d), print(self))
+			if (self._nishio_forcing_chain_check_cell_contradictions(print_start, verbose) or
+				self._nishio_forcing_chain_check_unit_contradictions(print_start, verbose)):
+				start_cell.exclude({d})
+				if verbose:
+					print(' * Cell %s can only be %s' % (start_cell.cell_name(),
+						start_cell.value_string()))
+				for cell in self.cells():
+					cell.dcs = {}
+				return True
+			for cell in self.cells():
+				cell.dcs = {}
+		return False
+
+	def _nishio_forcing_chain_print_start(self, start_cell, d):
+		print(' - Start chains from cell %s, turning %d on' %
+			(start_cell.cell_name(), d))
+
+	def solve_anti_nishio_forcing_chains(self, verbose):
+		if self.solved():
+			return False
+		if verbose:
+			print('Try anti-Nishio forcing chains')
+		for y, x in product(range(9), range(9)):
+			if self.solve_anti_nishio_forcing_chain_from(x, y, verbose):
+				return True
+		if verbose:
+			print('...No anti-Nishio forcing chains found')
+		return False
+
+	def solve_anti_nishio_forcing_chain_from(self, x, y, verbose):
+		start_cell = self.cell(x, y)
+		if start_cell.solved():
+			return False
+		for d in start_cell.ds:
+			start_cell.dcs[d] = Color.RED
+			while (self._nishio_forcing_chain_propagate_on(verbose) or
+				self._nishio_forcing_chain_propagate_off(verbose)):
+				pass
+			print_start = lambda: (self._anti_nishio_forcing_chain_print_start(start_cell, d), print(self))
+			if (self._nishio_forcing_chain_check_cell_contradictions(print_start, verbose) or
+				self._nishio_forcing_chain_check_unit_contradictions(print_start, verbose)):
+				start_cell.include_only({d})
+				if verbose:
+					print(' * Cell %s can only be %s' % (start_cell.cell_name(),
+						start_cell.value_string()))
+				for cell in self.cells():
+					cell.dcs = {}
+				return True
+			for cell in self.cells():
+				cell.dcs = {}
+		return False
+
+	def _anti_nishio_forcing_chain_print_start(self, start_cell, d):
+		print(' - Start chains from cell %s, turning %d off' %
+			(start_cell.cell_name(), d))
+
+	def _nishio_forcing_chain_propagate_on(self, verbose):
+		colored = False
+		for cell in self.cells():
+			if cell.solved():
+				continue
+			seen = self.seen_from(cell.x, cell.y)
+			for d in cell.ds:
+				if cell.dcs.get(d, Color.NEITHER) & Color.BLUE:
+					continue
+				if all(cell.dcs.get(p, Color.NEITHER) & Color.RED for p in cell.ds - {d}):
+					cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | Color.BLUE
+					colored = True
+					break
+				elif all(c.dcs.get(d, Color.NEITHER) & Color.RED for c in seen
+					if not c.solved() and d in c.ds):
+					cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | Color.BLUE
+					colored = True
+					break
+		return colored
+
+	def _nishio_forcing_chain_propagate_off(self, verbose):
+		colored = False
+		for cell in self.cells():
+			if cell.solved():
+				continue
+			seen = self.seen_from(cell.x, cell.y)
+			for d in cell.ds:
+				if (not any(cell.dcs.get(p, Color.NEITHER) & Color.RED for p in cell.ds - {d}) and
+					(cell.dcs.get(d, Color.NEITHER) & Color.BLUE)):
+					cell.dcs.update({p: cell.dcs.get(p, Color.NEITHER) | Color.RED
+						for p in cell.ds - {d}})
+					colored = True
+					break
+				elif (not (cell.dcs.get(d, Color.NEITHER) & Color.RED) and
+					any(c.dcs.get(d, Color.NEITHER) & Color.BLUE for c in seen)):
+					cell.dcs[d] = cell.dcs.get(d, Color.NEITHER) | Color.RED
+					colored = True
+		return colored
+
+	def _nishio_forcing_chain_check_cell_contradictions(self, print_start, verbose):
+		for cell in self.cells():
+			if Color.PURPLE in cell.dcs.values():
+				if verbose:
+					print_start()
+					print(' - Find a cell with a candidate turned both on and off')
+					purple_candidates = {d for d in cell.dcs if cell.dcs[d] == Color.PURPLE}
+					print(' - Cell %s has a candidate %s on and off' %
+						(cell.cell_name(), set_string(purple_candidates)))
+				return True
+			if all(cell.dcs.get(d, Color.NEITHER) & Color.RED for d in cell.ds):
+				if verbose:
+					print_start()
+					print(' - Find a cell with all candidates turned off')
+					print(' - Cell %s has all candidates %s turned off' %
+						(cell.cell_name(), cell.value_string()))
+				return True
+		return False
+
+	def _nishio_forcing_chain_check_unit_contradictions(self, print_start, verbose):
+		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES):
+			unit = self.unit(unit_type, i)
+			if all(c.dcs.get(d, Color.NEITHER) & Color.RED for c in unit):
+				if verbose:
+					print_start()
+					print(' - Find a unit with all of a candidate turned off')
+					red_cells = [c for c in unit if c.dcs.get(d, Color.NEITHER) & Color.RED]
+					print(' * In %s %s, cells (%s) have %d turned off' %
+						(unit_type, self.unit_name(unit_type, i),
+							', '.join(c.cell_name() for c in red_cells), d))
+				return True
+			blue_cells = [c for c in unit if (c.dcs.get(d, Color.NEITHER) & Color.BLUE) or
+				c.value() == d]
+			if len(blue_cells) > 1:
+				if verbose:
+					print_start()
+					print(' - Find a unit with more than one of a candidate turned on')
+					print(' * In %s %s, cells (%s) have %d turned on' %
+						(unit_type, self.unit_name(unit_type, i),
+							', '.join(c.cell_name() for c in blue_cells), d))
+				return True
+		return False
+
 	def solve_n_cell_subset_exclusion(self, n, verbose):
 		if self.solved():
 			return False
@@ -1155,9 +1314,13 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			return 17
 		if self.solve_unit_forcing_chains(verbose):
 			return 18
+		if self.solve_nishio_forcing_chains(verbose):
+			return 19
+		if self.solve_anti_nishio_forcing_chains(verbose):
+			return 20
 		for n in range(2, 4): # larger subsets are too slow
 			if self.solve_n_cell_subset_exclusion(n, verbose):
-				return 17 + n
+				return 19 + n
 		return 0
 
 	def method_name(self, difficulty):
@@ -1165,8 +1328,10 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			'naked pairs', 'hidden pairs', 'naked triples', 'hidden triples',
 			'naked quads', 'hidden quads', 'unit intersections', 'X-wings',
 			'swordfish', 'jellyfish', 'Y-wings', 'XYZ-wings', '3D Medusas',
-			'dual Medusas', 'bi-value cell forcing chains', 'dual unit forcing chains',
-			'2-cell subset exclusion', '3-cell subset exclusion']
+			'dual Medusas', 'bi-value cell forcing chains',
+			'dual unit forcing chains', 'Nishio forcing chains',
+			'anti-Nishio forcing chains', '2-cell subset exclusion',
+			'3-cell subset exclusion']
 		return method_names[difficulty]
 
 	def solve(self, verbose=False):

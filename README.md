@@ -17,6 +17,9 @@ A Sudoku solver that uses human strategies.
   of a bi-value cell)
 * [Bi-value cell forcing chains](http://www.sudokuwiki.org/Cell_Forcing_Chains)
 * [Dual unit forcing chains](http://www.sudokuwiki.org/Unit_Forcing_Chains)
+* [Nishio forcing chains](http://www.sudokuwiki.org/Nishio_Forcing_Chains)
+* Anti-Nishio forcing chains (Nishio forcing chains that start with a candidate
+  digit off instead of on)
 * [Subset exclusion](http://www.sudokuwiki.org/Aligned_Pair_Exclusion) (incomplete)
 
 These strategies are insufficient to solve all boards. My intention is to
