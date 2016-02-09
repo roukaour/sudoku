@@ -16,7 +16,7 @@ class Sudoku(object):
 	UNIT_TYPES = ['row', 'column', 'block']
 
 	# A dictionary of solution strategies, keyed by their increasing difficulty
-	strategies = {}
+	strategies = {0: Strategy('nothing', lambda sudoku, verbose: False)}
 
 	def __init__(self, *cells):
 		if len(cells) == 1:
@@ -194,10 +194,6 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		"""Try to solve any unsolved cells with all registered strategies."""
 		if verbose:
 			print(self.terse_str())
-		if self.solved():
-			if verbose:
-				print('Already solved!')
-			return 'nothing'
 		if verbose:
 			print('Solving:', self.code_str())
 		num_solved = self.num_solved()
@@ -207,13 +203,10 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			last_difficulty = self._solve_strategies(verbose)
 			difficulty = max(difficulty, last_difficulty)
 		if verbose:
-			if self.solved():
-				print('Completely solved!')
-				print('Most advanced method used:', self.strategies[difficulty].name)
-			else:
-				print('...Cannot solve further (solved %d cells)' %
-					(self.num_solved() - num_solved))
-				print('Solved:', self.code_str())
+			print('Completely solved!' if self.solved() else '...Cannot solve further',
+				'(solved %d cells)' % (self.num_solved() - num_solved))
+			print('Most advanced method used:', self.strategies[difficulty].name)
+			print('Solved:', self.code_str())
 			print(self)
 		return self.strategies[difficulty].name
 
