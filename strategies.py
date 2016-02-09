@@ -904,7 +904,7 @@ def nishio_forcing_chain_check_cell_contradictions(sudoku, print_start, verbose)
 				print_start()
 				print(' - Find a cell with a candidate turned both on and off')
 				purple_candidates = {d for d in cell.dcs if cell.dcs[d] == Color.PURPLE}
-				print(' - Cell %s has a candidate %s on and off' %
+				print(' - Cell %s has %s turned on and off' %
 					(cell.cell_name(), set_string(purple_candidates)))
 			return True
 		if all(cell.dcs.get(d, Color.NEITHER) & Color.RED for d in cell.ds):
