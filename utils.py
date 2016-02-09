@@ -26,7 +26,7 @@ def any_equal(s):
 	return len(set(s)) < len(s)
 
 def all_equal(s):
-	"""Retuern whether all elements in a list are equal."""
+	"""Return whether all elements in a list are equal."""
 	return all(all(x == y for y in s) for x in s)
 
 def union(s):
