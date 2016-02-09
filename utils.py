@@ -27,7 +27,7 @@ def any_equal(s):
 
 def all_equal(s):
 	"""Return whether all elements in a list are equal."""
-	return all(all(x == y for y in s) for x in s)
+	return len(set(s)) <= 1
 
 def union(s):
 	"""Return the mutual union of a collection of collections."""
