@@ -21,14 +21,14 @@ class Sudoku(object):
 	@classmethod
 	def strategy(cls, name, difficulty):
 		"""Decorate a strategy function to register it for use in the solve method."""
-		def decorator(method):
-			@wraps(method)
-			def wrapper(self, verbose):
-				if self.solved():
+		def decorator(function):
+			@wraps(function)
+			def wrapper(sudoku, verbose):
+				if sudoku.solved():
 					return False
 				if verbose:
 					print('Try', name)
-				changed = method(self, verbose)
+				changed = function(sudoku, verbose)
 				if verbose and not changed:
 					print('...No', name, 'found')
 				return changed
