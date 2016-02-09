@@ -5,7 +5,7 @@ from __future__ import print_function
 from board import Sudoku
 from strategies import *
 
-import argparse
+from argparse import ArgumentParser
 
 def solve_board(board, quiet):
 	"""Solve a single board."""
@@ -34,7 +34,7 @@ def solve_boards(file):
 				line, hardest, sep='\t')
 
 def main():
-	parser = argparse.ArgumentParser(description='Human-style Sudoku solver')
+	parser = ArgumentParser(description='Human-style Sudoku solver')
 	parser.add_argument('-q', '--quiet', action='store_true',
 		help='solve a board without printing anything')
 	parser.add_argument('-f', '--file',
