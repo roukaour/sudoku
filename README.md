@@ -13,8 +13,8 @@ A Sudoku solver that uses human strategies.
   [XYZ-wings](http://www.sudokuwiki.org/XYZ_Wing)
 * [3D Medusas](http://www.sudokuwiki.org/3D_Medusa) (a generalization of
   [simple coloring](http://www.sudokuwiki.org/Singles_Chains))
-* Dual Medusas (3D Medusas that start with a bi-location value in a unit instead
-  of a bi-value cell)
+* Dual Medusas (3D Medusas that start with a bi-location candidate in a unit
+  instead of a bi-value cell)
 * [Bi-value cell forcing chains](http://www.sudokuwiki.org/Cell_Forcing_Chains)
 * [Dual unit forcing chains](http://www.sudokuwiki.org/Unit_Forcing_Chains)
 * [Nishio forcing chains](http://www.sudokuwiki.org/Nishio_Forcing_Chains)

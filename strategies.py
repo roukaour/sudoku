@@ -9,6 +9,7 @@ from itertools import product, combinations
 
 @Sudoku.strategy('naked singles', 1)
 def solve_strip_naked_singles(sudoku, verbose):
+	"""Exclude the values of seen solved cells as candidates for unsolved cells."""
 	return any([solve_strip_naked_single(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9))])
 
@@ -25,14 +26,20 @@ def solve_strip_naked_single(sudoku, x, y, verbose):
 
 @Sudoku.strategy('naked pairs', 3)
 def solve_naked_pairs(sudoku, verbose):
+	"""Exclude the candidates of seen bi-value cell pairs from unsolved cells
+	in their unit."""
 	return solve_naked_n_tuples(sudoku, 2, verbose)
 
 @Sudoku.strategy('naked triples', 5)
 def solve_naked_triples(sudoku, verbose):
+	"""Exclude the candidates of seen tri-value cell triples from unsolved cells
+	in their unit."""
 	return solve_naked_n_tuples(sudoku, 3, verbose)
 
 @Sudoku.strategy('naked quads', 7)
 def solve_naked_quads(sudoku, verbose):
+	"""Exclude the candidates of seen quad-value cell quads from unsolved cells
+	in their unit."""
 	return solve_naked_n_tuples(sudoku, 4, verbose)
 
 def solve_naked_n_tuples(sudoku, n, verbose):
@@ -62,18 +69,25 @@ def solve_naked_n_tuples_in_unit(sudoku, unit_type, n, i, verbose):
 
 @Sudoku.strategy('hidden singles', 2)
 def solve_hidden_singles(sudoku, verbose):
+	"""Find cells with a unique candidate in a unit and set them to that value."""
 	return solve_hidden_n_tuples(sudoku, 1, verbose)
 
 @Sudoku.strategy('hidden pairs', 4)
 def solve_hidden_pairs(sudoku, verbose):
+	"""Find pairs of cells with two unique candidates in a unit and limit them
+	to those candidates."""
 	return solve_hidden_n_tuples(sudoku, 2, verbose)
 
 @Sudoku.strategy('hidden triples', 6)
 def solve_hidden_triples(sudoku, verbose):
+	"""Find triples of cells with three unique candidates in a unit and limit them
+	to those candidates."""
 	return solve_hidden_n_tuples(sudoku, 3, verbose)
 
 @Sudoku.strategy('hidden quads', 8)
 def solve_hidden_quads(sudoku, verbose):
+	"""Find quads of cells with four unique candidates in a unit and limit them
+	to those candidates."""
 	return solve_hidden_n_tuples(sudoku, 4, verbose)
 
 def solve_hidden_n_tuples(sudoku, n, verbose):
@@ -109,6 +123,9 @@ def solve_hidden_n_tuples_in_unit(sudoku, unit_type, n, i, verbose):
 
 @Sudoku.strategy('unit intersection', 9)
 def solve_unit_intersections(sudoku, verbose):
+	"""Find pairs/triples of cells in a unit with a unique candidate, that are
+	also all in one intersecting unit, and exclude that candidate from the
+	other cells in the intersecting unit."""
 	return any(solve_unit_intersections_in_unit(sudoku, unit_type, i, verbose)
 		for unit_type, i in product(Sudoku.UNIT_TYPES, range(9)))
 
@@ -154,14 +171,23 @@ def solve_unit_intersections_in_unit(sudoku, unit_type, i, verbose):
 
 @Sudoku.strategy('X-wing', 10)
 def solve_x_wings(sudoku, verbose):
+	"""Find two pairs of cells with a unique candidate in two different units,
+	that are also both in two intersecting units, and exclude that candidate
+	from the other cells in the intersecting units."""
 	return solve_n_fish(sudoku, 2, verbose)
 
 @Sudoku.strategy('swordfish', 12)
-def solve_x_wings(sudoku, verbose):
+def solve_swordfish(sudoku, verbose):
+	"""Find three triples of cells with a unique candidate in three different
+	units, that are also both in three intersecting units, and exclude that
+	candidate from the other cells in the intersecting units."""
 	return solve_n_fish(sudoku, 3, verbose)
 
 @Sudoku.strategy('jellyfish', 16)
-def solve_x_wings(sudoku, verbose):
+def solve_jellyfish(sudoku, verbose):
+	"""Find four quads of cells with a unique candidate in four different units,
+	that are also both in four intersecting units, and exclude that candidate
+	from the other cells in the intersecting units."""
 	return solve_n_fish(sudoku, 4, verbose)
 
 def solve_n_fish(sudoku, n, verbose):
@@ -211,6 +237,9 @@ def solve_n_fish_in_units(sudoku, unit_type, n, indexes, verbose):
 
 @Sudoku.strategy('Y-wing', 11)
 def solve_y_wings(sudoku, verbose):
+	"""Find a "hinge" cell with candidates {X, Y}, that can see two "wing" cells
+	with candidates {X, Z} and {Y, Z}, such that the wings cannot see each other;
+	and exclude Z from any cells that can see both wings."""
 	return any(solve_y_wing_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
 
@@ -247,6 +276,9 @@ def solve_y_wing_from(sudoku, x, y, verbose):
 
 @Sudoku.strategy('XYZ-wing', 13)
 def solve_xyz_wings(sudoku, verbose):
+	"""Find a "hinge" cell with candidates {X, Y, Z}, that can see two "wing"
+	cells with candidates {X, Z} and {Y, Z}, such that the wings cannot see each
+	other; and exclude Z from any cells that can see both wings and the hinge."""
 	return any(solve_xyz_wing_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
 
@@ -282,6 +314,9 @@ def solve_xyz_wing_from(sudoku, x, y, verbose):
 
 @Sudoku.strategy('3D Medusa', 14)
 def solve_3d_medusas(sudoku, verbose):
+	"""Color two candidates of a bi-value cell red and blue, and propagate the
+	colors outward along strong links; then infer the correct color based on the
+	derived contradictions or tautologies."""
 	return any(solve_3d_medusas_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
 
@@ -315,6 +350,9 @@ def m3d_medusa_print_chain_start(sudoku, start_cell):
 
 @Sudoku.strategy('dual Medusa', 15)
 def solve_dual_medusas(sudoku, verbose):
+	"""Color two bi-location candidates in a unit red and blue, and propagate
+	the colors outward along strong links; then infer the correct color based on
+	the derived contradictions or tautologies."""
 	return any(solve_dual_medusas_from(sudoku, unit_type, i, d, verbose)
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES))
 
@@ -515,6 +553,9 @@ def medusa_check_partial_cells(sudoku, print_start, verbose):
 
 @Sudoku.strategy('bi-value cell forcing chain', 17)
 def solve_cell_forcing_chains(sudoku, verbose):
+	"""Color two candidates of a bi-value cell red and blue, and propagate the
+	colors outward as if they were the actual values of that cell; then exclude
+	candidates based on the derived contradictions or tautologies."""
 	return any(solve_cell_forcing_chain_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
 
@@ -551,6 +592,9 @@ def cell_forcing_chain_print_start(sudoku, start_cell):
 
 @Sudoku.strategy('dual unit forcing chain', 18)
 def solve_unit_forcing_chains(sudoku, verbose):
+	"""Color two bi-location candidates in a unit red and blue, and propagate
+	the colors outward as if they were the actual values of those cells; then
+	exclude candidates based on the derived contradictions or tautologies."""
 	return any(solve_unit_forcing_chain_from(sudoku, unit_type, i, d, verbose)
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES))
 
@@ -748,6 +792,9 @@ def forcing_chain_check_seen_cells(sudoku, print_start, verbose):
 
 @Sudoku.strategy('Nishio forcing chain', 19)
 def solve_nishio_forcing_chains(sudoku, verbose):
+	"""Turn a candidate in an unsolved cell on, and propagate other on/off
+	candidates outward as if the starting one were actually on; then
+	exclude candidates based on the derived contradictions or tautologies."""
 	return any(solve_nishio_forcing_chain_from(sudoku, start_cell, verbose)
 		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
 
@@ -779,6 +826,9 @@ def nishio_forcing_chain_print_start(sudoku, start_cell, d):
 
 @Sudoku.strategy('anti-Nishio forcing chain', 20)
 def solve_anti_nishio_forcing_chains(sudoku, verbose):
+	"""Turn a candidate in an unsolved cell off, and propagate other on/off
+	candidates outward as if the starting one were actually off; then
+	exclude candidates based on the derived contradictions or tautologies."""
 	return any(solve_anti_nishio_forcing_chain_from(sudoku, start_cell, verbose)
 		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
 
@@ -892,10 +942,14 @@ def nishio_forcing_chain_check_unit_contradictions(sudoku, print_start, verbose)
 
 @Sudoku.strategy('2-cell subset exclusion', 21)
 def solve_2_cell_subset_exclusion(sudoku, verbose):
+	"""Find a pair of cells that would lead to a contradiction if one of them
+	actually were a certain candidate, and exclude that candidate."""
 	return solve_n_cell_subset_exclusion(sudoku, 2, verbose)
 
 @Sudoku.strategy('3-cell subset exclusion', 22)
 def solve_3_cell_subset_exclusion(sudoku, verbose):
+	"""Find a triple of cells that would lead to a contradiction if one of them
+	actually were a certain candidate, and exclude that candidate."""
 	return solve_n_cell_subset_exclusion(sudoku, 3, verbose)
 
 def solve_n_cell_subset_exclusion(sudoku, n, verbose):

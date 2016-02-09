@@ -191,6 +191,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		return len([c for c in self.cells() if c.solved()])
 
 	def solve(self, verbose=False):
+		"""Try to solve any unsolved cells with all registered strategies."""
 		if verbose:
 			print(self.terse_str())
 		if self.solved():
@@ -217,16 +218,17 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		return self.strategies[difficulty].name
 
 	def _solve_strategies(self, verbose):
+		"""Try all registered strategies in order of increasing difficulty."""
 		if self.solved():
 			return 0
-		for difficulty in sorted(self.strategies):
-			strategy = self.strategies[difficulty].function
-			if strategy(self, verbose):
+		for difficulty, strategy in sorted(self.strategies.items()):
+			if strategy.function(self, verbose):
 				return difficulty
 		return 0
 
 	@classmethod
 	def strategy(cls, name, difficulty):
+		"""Decorate a strategy function to register it for use in the solve method."""
 		def decorator(method):
 			@wraps(method)
 			def wrapper(self, verbose):
