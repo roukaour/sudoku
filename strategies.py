@@ -107,7 +107,7 @@ def solve_hidden_n_tuples_in_unit(sudoku, unit_type, n, i, verbose):
 						set_string(n_tuple_uniques)))
 	return changed
 
-@Sudoku.strategy('unit intersections', 9)
+@Sudoku.strategy('unit intersection', 9)
 def solve_unit_intersections(sudoku, verbose):
 	return any(solve_unit_intersections_in_unit(sudoku, unit_type, i, verbose)
 		for unit_type, i in product(Sudoku.UNIT_TYPES, range(9)))
@@ -152,7 +152,7 @@ def solve_unit_intersections_in_unit(sudoku, unit_type, i, verbose):
 					(cell.cell_name(), cell.value_string()))
 	return changed
 
-@Sudoku.strategy('X-wings', 10)
+@Sudoku.strategy('X-wing', 10)
 def solve_x_wings(sudoku, verbose):
 	return solve_n_fish(sudoku, 2, verbose)
 
@@ -209,7 +209,7 @@ def solve_n_fish_in_units(sudoku, unit_type, n, indexes, verbose):
 					(cell.cell_name(), cell.value()))
 	return changed
 
-@Sudoku.strategy('Y-wings', 11)
+@Sudoku.strategy('Y-wing', 11)
 def solve_y_wings(sudoku, verbose):
 	return any(solve_y_wing_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
@@ -245,7 +245,7 @@ def solve_y_wing_from(sudoku, x, y, verbose):
 			return True
 	return False
 
-@Sudoku.strategy('XYZ-wings', 13)
+@Sudoku.strategy('XYZ-wing', 13)
 def solve_xyz_wings(sudoku, verbose):
 	return any(solve_xyz_wing_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
@@ -280,7 +280,7 @@ def solve_xyz_wing_from(sudoku, x, y, verbose):
 			return True
 	return False
 
-@Sudoku.strategy('3D Medusas', 14)
+@Sudoku.strategy('3D Medusa', 14)
 def solve_3d_medusas(sudoku, verbose):
 	return any(solve_3d_medusas_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
@@ -313,7 +313,7 @@ def m3d_medusa_print_chain_start(sudoku, start_cell):
 	print(' - Start chains from cell %s, coloring %d %s and %d %s' %
 		(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
 
-@Sudoku.strategy('dual Medusas', 15)
+@Sudoku.strategy('dual Medusa', 15)
 def solve_dual_medusas(sudoku, verbose):
 	return any(solve_dual_medusas_from(sudoku, unit_type, i, d, verbose)
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES))
@@ -513,7 +513,7 @@ def medusa_check_partial_cells(sudoku, print_start, verbose):
 			changed |= cell_changed
 	return changed
 
-@Sudoku.strategy('bi-value cell forcing chains', 17)
+@Sudoku.strategy('bi-value cell forcing chain', 17)
 def solve_cell_forcing_chains(sudoku, verbose):
 	return any(solve_cell_forcing_chain_from(sudoku, x, y, verbose)
 		for y, x in product(range(9), range(9)))
@@ -549,7 +549,7 @@ def cell_forcing_chain_print_start(sudoku, start_cell):
 	print(' - Start from cell %s, coloring %d %s and %d %s' %
 		(start_cell.cell_name(), p, start_cell.dcs[p], q, start_cell.dcs[q]))
 
-@Sudoku.strategy('dual unit forcing chains', 18)
+@Sudoku.strategy('dual unit forcing chain', 18)
 def solve_unit_forcing_chains(sudoku, verbose):
 	return any(solve_unit_forcing_chain_from(sudoku, unit_type, i, d, verbose)
 		for unit_type, i, d in product(Sudoku.UNIT_TYPES, range(9), Cell.VALUES))
@@ -746,7 +746,7 @@ def forcing_chain_check_seen_cells(sudoku, print_start, verbose):
 			changed |= cell_changed
 	return changed
 
-@Sudoku.strategy('Nishio forcing chains', 19)
+@Sudoku.strategy('Nishio forcing chain', 19)
 def solve_nishio_forcing_chains(sudoku, verbose):
 	return any(solve_nishio_forcing_chain_from(sudoku, start_cell, verbose)
 		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
@@ -777,7 +777,7 @@ def nishio_forcing_chain_print_start(sudoku, start_cell, d):
 	print(' - Start chains from cell %s, turning %d on' %
 		(start_cell.cell_name(), d))
 
-@Sudoku.strategy('anti-Nishio forcing chains', 20)
+@Sudoku.strategy('anti-Nishio forcing chain', 20)
 def solve_anti_nishio_forcing_chains(sudoku, verbose):
 	return any(solve_anti_nishio_forcing_chain_from(sudoku, start_cell, verbose)
 		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
