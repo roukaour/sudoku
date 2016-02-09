@@ -42,7 +42,7 @@ are unsolvable.
   e.g. `./sudoku.py 000000001000000020000003000000040500006000300007810000010020004030000070950000000`
 * `./sudoku.py FILE`  
   Solves each board in the given file and outputs a TSV summary.  
-  e.g. `./sudoku.py boards.txt`
+  e.g. `./sudoku.py boards.txt > solutions.tsv`
 * `./sudoku.py -q BOARD`  
   Solves the given board without printing anything. Useful for measuring performance.  
   e.g. `time ./sudoku.py -q 000000001000000020000003000000040500006000300007810000010020004030000070950000000`

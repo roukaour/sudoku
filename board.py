@@ -28,7 +28,7 @@ class Sudoku(object):
 		if len(cells) == 9:
 			cells = flatten(map(list, cells))
 		if len(cells) != 81:
-			raise ValueError('Invalid Sudoku board: %s' % cells)
+			raise ValueError('Invalid Sudoku board: %r' % (cells,))
 		self.cm = []
 		while cells:
 			row, cells = cells[:9], cells[9:]
