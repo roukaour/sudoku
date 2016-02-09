@@ -18,6 +18,24 @@ class Sudoku(object):
 	# A dictionary of solution strategies, keyed by their increasing difficulty
 	strategies = {0: Strategy('nothing', lambda sudoku, verbose: False)}
 
+	@classmethod
+	def strategy(cls, name, difficulty):
+		"""Decorate a strategy function to register it for use in the solve method."""
+		def decorator(method):
+			@wraps(method)
+			def wrapper(self, verbose):
+				if self.solved():
+					return False
+				if verbose:
+					print('Try', name)
+				changed = method(self, verbose)
+				if verbose and not changed:
+					print('...No', name, 'found')
+				return changed
+			cls.strategies[difficulty] = Strategy(name, wrapper)
+			return wrapper
+		return decorator
+
 	def __init__(self, *cells):
 		if len(cells) == 1:
 			cells = cells[0]
@@ -218,21 +236,3 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			if strategy.function(self, verbose):
 				return difficulty
 		return 0
-
-	@classmethod
-	def strategy(cls, name, difficulty):
-		"""Decorate a strategy function to register it for use in the solve method."""
-		def decorator(method):
-			@wraps(method)
-			def wrapper(self, verbose):
-				if self.solved():
-					return False
-				if verbose:
-					print('Try', name)
-				changed = method(self, verbose)
-				if verbose and not changed:
-					print('...No', name, 'found')
-				return changed
-			cls.strategies[difficulty] = Strategy(name, wrapper)
-			return wrapper
-		return decorator
