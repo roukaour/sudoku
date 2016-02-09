@@ -34,3 +34,15 @@ it can solve all 50 of the easy ones, 64 of the 95 hard ones, and 9 of the 11
 hardest ones. However, all of the
 [AI Sudoku Top 10](http://www.aisudoku.com/en/AIwME.html)
 are unsolvable.
+
+## Usage
+
+* `./sudoku.py BOARD`  
+  Solves the given board and shows steps.  
+  e.g. `./sudoku.py 000000001000000020000003000000040500006000300007810000010020004030000070950000000`
+* `./sudoku.py FILE`  
+  Solves each board in the given file and outputs a TSV summary.  
+  e.g. `./sudoku.py boards.txt`
+* `./sudoku.py -q BOARD`  
+  Solves the given board without printing anything. Useful for measuring performance.  
+  e.g. `time ./sudoku.py -q 000000001000000020000003000000040500006000300007810000010020004030000070950000000`
