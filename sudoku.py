@@ -6,16 +6,18 @@ from board import Sudoku
 from strategies import *
 
 from argparse import ArgumentParser
+import sys
 
-def solve_board(board, quiet):
+def solve_board(board, verbose):
 	"""Solve a single board."""
 	board = Sudoku(board)
-	board.solve(not quiet)
+	board.solve(verbose)
 	board.verify()
 
-def solve_boards(file):
+def solve_boards(file, verbose):
 	"""Solve each board in a text file."""
-	print('#', 'solved?', 'board', 'method', sep='\t')
+	if verbose:
+		print('#', 'solved?', 'board', 'method', sep='\t')
 	with open(file, 'r') as boards:
 		for line in boards:
 			line = line.strip()
@@ -30,8 +32,9 @@ def solve_boards(file):
 				print('*** ERROR:', line)
 				Sudoku(line).solve(True)
 				break
-			print(board.num_solved() - n, 'TRUE' if board.solved() else 'FALSE',
-				line, hardest, sep='\t')
+			if verbose:
+				print(board.num_solved() - n, 'TRUE' if board.solved() else 'FALSE',
+					line, hardest, sep='\t')
 
 def main():
 	parser = ArgumentParser(description='Human-style Sudoku solver')
@@ -43,9 +46,9 @@ def main():
 		help='a single board to solve')
 	args = vars(parser.parse_args())
 	if args['BOARD']:
-		solve_board(args['BOARD'], args['quiet'])
+		solve_board(args['BOARD'], not args['quiet'])
 	elif args['file']:
-		solve_boards(args['file'])
+		solve_boards(args['file'], not args['quiet'])
 	else:
 		parser.print_usage()
 
