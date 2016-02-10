@@ -223,7 +223,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		if verbose:
 			print('Completely solved!' if self.solved() else '...Cannot solve further',
 				'(solved %d cells)' % (self.num_solved() - num_solved))
-			print('Most advanced method used:', self.strategies[difficulty].name)
+			print('Most advanced strategy used:', self.strategies[difficulty].name)
 			print('Solved:', self.code_str())
 			print(self)
 		return self.strategies[difficulty].name

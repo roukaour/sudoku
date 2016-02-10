@@ -17,7 +17,7 @@ def solve_board(board, verbose):
 def solve_boards(file, verbose):
 	"""Solve each board in a text file."""
 	if verbose:
-		print('#', 'solved?', 'board', 'method', sep='\t')
+		print('#', 'solved?', 'board', 'strategy', sep='\t')
 	with open(file, 'r') as boards:
 		for line in boards:
 			line = line.strip()
