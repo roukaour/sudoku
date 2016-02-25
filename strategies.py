@@ -969,3 +969,32 @@ def solve_n_cell_subset_exclusion(sudoku, n, verbose):
 					cell.value_string()))
 			return True
 	return False
+
+@Sudoku.strategy('guessing', 999)
+def solve_guessing(sudoku, verbose):
+	"""Guess a candidate for a cell and see if a contradiction occurs."""
+	return any(solve_guessing_from(sudoku, start_cell, verbose)
+		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
+
+def solve_guessing_from(sudoku, start_cell, verbose):
+	if start_cell.solved():
+		return False
+	for d in start_cell.ds:
+		guess = sudoku.copy()
+		guess.cell(start_cell.x, start_cell.y).include_only({d})
+		try:
+			guess.solve(exclude=[999], verbose=False)
+			guess.verify()
+		except:
+			start_cell.exclude({d})
+			if verbose:
+				print(' * Cell %s cannot be %d (guessed; there is a contradiction)' %
+					(start_cell.cell_name(), d))
+			return True
+		if guess.solved():
+			start_cell.include_only({d})
+			if verbose:
+				print(' * Cell %s is %d (guessed successfully)' %
+					(start_cell.cell_name(), d))
+			return True
+	return False

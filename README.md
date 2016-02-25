@@ -21,10 +21,11 @@ A Sudoku solver that uses human strategies.
 * Anti-Nishio forcing chains (Nishio forcing chains that start with a candidate
   digit off instead of on)
 * [Subset exclusion](http://www.sudokuwiki.org/Aligned_Pair_Exclusion) (incomplete)
+* Guessing individual cells (with the `-g` flag enabled)
 
-These strategies are insufficient to solve all boards. My intention is to
-automate the strategies that I fully understand, since at that point doing them
-myself is just busy work.
+These strategies are insufficient to solve all boards without guessing. My
+intention is to automate the strategies that I fully understand, since at that
+point doing them myself is just busy work.
 
 So far it can solve 99.5% of
 [these 49,151 17-hint Sudoku](http://staffhome.ecm.uwa.edu.au/~00013890/sudokumin.php)
@@ -33,7 +34,7 @@ So far it can solve 99.5% of
 it can solve all 50 of the easy ones, 64 of the 95 hard ones, and 9 of the 11
 hardest ones. However, all of the
 [AI Sudoku Top 10](http://www.aisudoku.com/en/AIwME.html)
-are unsolvable.
+are unsolvable. (With guessing, all boards are solvable.)
 
 ## Usage
 
@@ -46,3 +47,6 @@ are unsolvable.
 * `./sudoku.py -q BOARD`  
   Solves the given board without printing anything. Useful for measuring performance.  
   e.g. `time ./sudoku.py -q 000000001000000020000003000000040500006000300007810000010020004030000070950000000`
+* `./sudoku.py -g BOARD` or `./sudoku.py -g -f FILE`  
+  Solves the given board or file with guessing enabled.
+  e.g. `./sudoku.py 000000001000000020003004000000003500010060000720000080000108000000720000900000600`

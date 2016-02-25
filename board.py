@@ -136,6 +136,9 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		if not verified:
 			raise RuntimeError('Sudoku board is in an invalid state')
 
+	def copy(self):
+		return Sudoku(*self.cm)
+
 	def cells(self):
 		return flatten(self.cm)
 

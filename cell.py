@@ -15,7 +15,9 @@ class Cell(object):
 		self.x = x
 		self.y = y
 		self.b = y // 3 * 3 + x // 3
-		if type(ds) in [list, tuple, set]:
+		if isinstance(ds, Cell):
+			self.ds = set(ds.ds)
+		elif isinstance(ds, (list, tuple, set)):
 			self.ds = set(ds)
 		elif ds in Cell.VALUES or ds in map(str, Cell.VALUES):
 			self.ds = {int(ds)}
@@ -32,7 +34,7 @@ class Cell(object):
 			', '.join(self.dcs.get(d, Color.NEITHER).colored(d) for d in sorted(self.ds)))
 
 	def __lt__(self, other):
-		return self.y < other.y or self.x < other.x
+		return (self.y, self.x) < (other.y, other.x)
 
 	def row_name(self):
 		return Cell.ROWS[self.y]
