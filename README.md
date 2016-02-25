@@ -48,5 +48,5 @@ are unsolvable. (With guessing, all boards are solvable.)
   Solves the given board without printing anything. Useful for measuring performance.  
   e.g. `time ./sudoku.py -q 000000001000000020000003000000040500006000300007810000010020004030000070950000000`
 * `./sudoku.py -g BOARD` or `./sudoku.py -g -f FILE`  
-  Solves the given board or file with guessing enabled.
+  Solves the given board or file with guessing enabled.  
   e.g. `./sudoku.py 000000001000000020003004000000003500010060000720000080000108000000720000900000600`
