@@ -796,7 +796,7 @@ def solve_nishio_forcing_chains(sudoku, verbose):
 	candidates outward as if the starting one were actually on; then
 	exclude candidates based on the derived contradictions or tautologies."""
 	return any(solve_nishio_forcing_chain_from(sudoku, start_cell, verbose)
-		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
+		for start_cell in sorted(sudoku.cells()))
 
 def solve_nishio_forcing_chain_from(sudoku, start_cell, verbose):
 	if start_cell.solved():
@@ -830,7 +830,7 @@ def solve_anti_nishio_forcing_chains(sudoku, verbose):
 	candidates outward as if the starting one were actually off; then
 	exclude candidates based on the derived contradictions or tautologies."""
 	return any(solve_anti_nishio_forcing_chain_from(sudoku, start_cell, verbose)
-		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
+		for start_cell in sorted(sudoku.cells()))
 
 def solve_anti_nishio_forcing_chain_from(sudoku, start_cell, verbose):
 	if start_cell.solved():
@@ -974,7 +974,7 @@ def solve_n_cell_subset_exclusion(sudoku, n, verbose):
 def solve_guessing(sudoku, verbose):
 	"""Guess a candidate for a cell and see if a contradiction occurs."""
 	return any(solve_guessing_from(sudoku, start_cell, verbose)
-		for start_cell in sorted(sudoku.cells(), key=lambda c: (len(c.ds), c)))
+		for start_cell in sorted(sudoku.cells()))
 
 def solve_guessing_from(sudoku, start_cell, verbose):
 	if start_cell.solved():
