@@ -208,7 +208,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 	def num_solved(self):
 		return len([c for c in self.cells() if c.solved()])
 
-	def solve(self, verbose=False):
+	def solve(self, max_difficulty=None, exclude=None, include_only=None, verbose=False):
 		"""Try to solve any unsolved cells with all registered strategies."""
 		if verbose:
 			print(self.terse_str())
@@ -218,7 +218,7 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 		difficulty = 0
 		last_difficulty = -1
 		while last_difficulty:
-			last_difficulty = self._solve_strategies(verbose)
+			last_difficulty = self._solve_strategies(max_difficulty, exclude, include_only, verbose)
 			difficulty = max(difficulty, last_difficulty)
 		if verbose:
 			print('Completely solved!' if self.solved() else '...Cannot solve further',
@@ -228,11 +228,15 @@ J | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s | %s%s%s %s%s%s %s%s%s |
 			print(self)
 		return self.strategies[difficulty].name
 
-	def _solve_strategies(self, verbose):
+	def _solve_strategies(self, max_difficulty=None, exclude=None, include_only=None, verbose=False):
 		"""Try all registered strategies in order of increasing difficulty."""
 		if self.solved():
 			return 0
 		for difficulty, strategy in sorted(self.strategies.items()):
+			if ((max_difficulty is not None and difficulty > max_difficulty) or
+				(exclude is not None and difficulty in exclude) or
+				(include_only is not None and difficulty not in include_only)):
+				continue
 			if strategy.function(self, verbose):
 				return difficulty
 		return 0

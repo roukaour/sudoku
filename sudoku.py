@@ -11,7 +11,7 @@ import sys
 def solve_board(board, verbose):
 	"""Solve a single board."""
 	board = Sudoku(board)
-	board.solve(verbose)
+	board.solve(verbose=verbose)
 	board.verify()
 
 def solve_boards(file, verbose):
@@ -30,7 +30,7 @@ def solve_boards(file, verbose):
 				board.verify()
 			except:
 				print('*** ERROR:', line)
-				Sudoku(line).solve(True)
+				Sudoku(line).solve(verbose=True)
 				break
 			if verbose:
 				print(board.num_solved() - n, 'TRUE' if board.solved() else 'FALSE',
