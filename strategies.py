@@ -988,12 +988,14 @@ def solve_guessing_from(sudoku, start_cell, verbose):
 		except:
 			start_cell.exclude({d})
 			if verbose:
+				print(sudoku)
 				print(' * Cell %s cannot be %d (guessed; there is a contradiction)' %
 					(start_cell.cell_name(), d))
 			return True
 		if guess.solved():
 			start_cell.include_only({d})
 			if verbose:
+				print(sudoku)
 				print(' * Cell %s is %d (guessed successfully)' %
 					(start_cell.cell_name(), d))
 			return True
